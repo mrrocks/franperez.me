@@ -1006,7 +1006,7 @@ body {
   left: 0;
   width: 36px;
   height: 66px;
-  background: url('/public/assets/f.svg?1371027145') no-repeat;
+  background: url("../assets/f.svg") no-repeat;
 }
 
 .r-a {
@@ -1019,7 +1019,7 @@ body {
   left: 39px;
   width: 48px;
   height: 63px;
-  background: url('/public/assets/r-a.svg?1371027134') no-repeat;
+  background: url("../assets/r-a.svg") no-repeat;
 }
 
 .a {
@@ -1032,7 +1032,7 @@ body {
   left: 90px;
   width: 44px;
   height: 62px;
-  background: url('/public/assets/a.svg?1371027122') no-repeat;
+  background: url("../assets/a.svg") no-repeat;
 }
 
 .n {
@@ -1045,7 +1045,7 @@ body {
   left: 133px;
   width: 41px;
   height: 63px;
-  background: url('/public/assets/n.svg?1371027113') no-repeat;
+  background: url("../assets/n.svg") no-repeat;
 }
 
 .p {
@@ -1058,7 +1058,7 @@ body {
   left: 201px;
   width: 35px;
   height: 61px;
-  background: url('/public/assets/p.svg?1371027100') no-repeat;
+  background: url("../assets/p.svg") no-repeat;
 }
 
 .e-a {
@@ -1071,7 +1071,7 @@ body {
   left: 238px;
   width: 36px;
   height: 62px;
-  background: url('/public/assets/e-a.svg?1371027296') no-repeat;
+  background: url("../assets/e-a.svg") no-repeat;
 }
 
 .r-b {
@@ -1084,7 +1084,7 @@ body {
   left: 278px;
   width: 41px;
   height: 65px;
-  background: url('/public/assets/r-b.svg?1371027353') no-repeat;
+  background: url("../assets/r-b.svg") no-repeat;
 }
 
 .e-b {
@@ -1097,7 +1097,7 @@ body {
   left: 320px;
   width: 42px;
   height: 65px;
-  background: url('/public/assets/e-b.svg?1371027661') no-repeat;
+  background: url("../assets/e-b.svg") no-repeat;
 }
 
 .z {
@@ -1110,7 +1110,7 @@ body {
   left: 358px;
   width: 48px;
   height: 66px;
-  background: url('/public/assets/z.svg?1371027685') no-repeat;
+  background: url("../assets/z.svg") no-repeat;
 }
 
 .accent {
@@ -1123,7 +1123,7 @@ body {
   left: 257px;
   width: 16px;
   height: 11px;
-  background: url('/public/assets/accent.svg?1371029012') no-repeat;
+  background: url("../assets/accent.svg") no-repeat;
 }
 
 @-webkit-keyframes letter {
