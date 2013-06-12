@@ -125,6 +125,7 @@ body {
   border: 3px solid rgba(255, 255, 255, 0.5);
   border-radius: 100px;
   text-indent: -10000px;
+  background-size: 50%;
 }
 .menu a:hover {
   border: 3px solid white;
@@ -462,7 +463,7 @@ body {
 
 .shield {
   position: absolute;
-  top: 20%;
+  top: 25%;
   left: 50%;
   margin-left: -225px;
   width: 450px;
