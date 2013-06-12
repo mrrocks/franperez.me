@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="41px" height="63px" viewBox="0 0 41 63" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
-    <g id="Page 1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
-        <path d="M-34.1652903,6.64898243 L-24.332208,5.37050529 L-0.462249955,61.7787031 L-8.12926002,62.7758036 L-14.5400163,47.2732913 L-33.5394352,49.7431528 L-35.7952399,66.3734048 L-43.46225,67.3705053 L-34.1652903,6.64898243 L-34.1652903,6.64898243 Z M-32.46225,43.3705053 L-16.46225,41.3154653 L-27.848307,14.3705053 L-28.0152813,14.3914638 L-32.46225,43.3705053 L-32.46225,43.3705053 Z M-32.46225,43.3705053" id="Shape" fill="#FFFFFF" sketch:type="MSShapeGroup" transform="translate(-21.962250, 36.370505) rotate(-359.000000) translate(21.962250, -36.370505) "></path>
-        <path d="M-0.46209765,3.00625423 L9.04158014,2.31930481 L32.3207338,50.4339175 L32.487901,50.4215299 L28.8825124,0.883467921 L36.2186649,0.353052882 L40.5379024,59.6987254 L30.4502691,60.4284684 L7.8623741,13.767711 L7.69633647,13.7800986 L11.1932923,61.8226378 L3.85713979,62.3530529 L-0.46209765,3.00625423 L-0.46209765,3.00625423 Z M-0.46209765,3.00625423" id="Shape" fill="#FFFFFF" sketch:type="MSShapeGroup" transform="translate(20.037902, 31.353053) rotate(-359.000000) translate(-20.037902, -31.353053) "></path>
+<svg width="42px" height="64px" viewBox="0 0 42 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <title>n</title>
+    <description>Created with Sketch (http://www.bohemiancoding.com/sketch)</description>
+    <defs></defs>
+    <g id="Page 1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M30.427,62.389 L10.746,20.431 L10.488,20.446 L13.082,63.367 L3.809,63.89 L0.379,3.099 L12.143,2.435 L31.666,44.661 L31.924,44.646 L29.402,1.461 L38.332,0.957 L41.762,61.749 L30.427,62.389 L30.427,62.389 Z M30.427,62.389" id="Shape" fill="#FFFFFF"></path>
     </g>
 </svg>

@@ -61,11 +61,11 @@ body {
 }
 
 .background {
-  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #afd6c0), color-stop(100%, #e6e9cb));
-  background-image: -webkit-linear-gradient(#afd6c0, #e6e9cb);
-  background-image: -moz-linear-gradient(#afd6c0, #e6e9cb);
-  background-image: -o-linear-gradient(#afd6c0, #e6e9cb);
-  background-image: linear-gradient(#afd6c0, #e6e9cb);
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #a4cfbd), color-stop(100%, #e5e8c8));
+  background-image: -webkit-linear-gradient(#a4cfbd, #e5e8c8);
+  background-image: -moz-linear-gradient(#a4cfbd, #e5e8c8);
+  background-image: -o-linear-gradient(#a4cfbd, #e5e8c8);
+  background-image: linear-gradient(#a4cfbd, #e5e8c8);
   animation: fadein 2s ease;
   -webkit-animation: fadein 2s ease;
   -ms-animation: fadein 2s ease;
@@ -690,13 +690,13 @@ body {
   -o-animation: grow 750ms ease 1s backwards;
   position: relative;
   display: inline-block;
-  width: 170px;
+  width: 160px;
   height: 40px;
   background-color: white;
   color: #C0DCC4;
   text-align: center;
   text-transform: uppercase;
-  font-size: 22px;
+  font-size: 20px;
   font-family: "adelle", serif;
   line-height: 43px;
 }
@@ -987,7 +987,7 @@ body {
 .name {
   position: relative;
   display: inline-block;
-  margin-top: 35px;
+  margin-top: 30px;
   width: 407px;
   height: 97px;
 }
@@ -1002,9 +1002,9 @@ body {
   -ms-animation: letter 300ms ease 1.5s backwards;
   -moz-animation: letter 300ms ease 1.5s backwards;
   -o-animation: letter 300ms ease 1.5s backwards;
-  top: 27px;
+  top: 32px;
   left: 0;
-  width: 36px;
+  width: 33px;
   height: 66px;
   background: url("../assets/f.svg") no-repeat;
 }
@@ -1015,10 +1015,10 @@ body {
   -ms-animation: letter 300ms ease 1.6s backwards;
   -moz-animation: letter 300ms ease 1.6s backwards;
   -o-animation: letter 300ms ease 1.6s backwards;
-  top: 21px;
-  left: 39px;
-  width: 48px;
-  height: 63px;
+  top: 27px;
+  left: 37px;
+  width: 47px;
+  height: 64px;
   background: url("../assets/r-a.svg") no-repeat;
 }
 
@@ -1028,10 +1028,10 @@ body {
   -ms-animation: letter 300ms ease 1.7s backwards;
   -moz-animation: letter 300ms ease 1.7s backwards;
   -o-animation: letter 300ms ease 1.7s backwards;
-  top: 15px;
-  left: 90px;
+  top: 20px;
+  left: 87px;
   width: 44px;
-  height: 62px;
+  height: 65px;
   background: url("../assets/a.svg") no-repeat;
 }
 
@@ -1041,10 +1041,10 @@ body {
   -ms-animation: letter 300ms ease 1.8s backwards;
   -moz-animation: letter 300ms ease 1.8s backwards;
   -o-animation: letter 300ms ease 1.8s backwards;
-  top: 10px;
-  left: 133px;
-  width: 41px;
-  height: 63px;
+  top: 15px;
+  left: 132px;
+  width: 42px;
+  height: 64px;
   background: url("../assets/n.svg") no-repeat;
 }
 
@@ -1054,10 +1054,10 @@ body {
   -ms-animation: letter 300ms ease 1.9s backwards;
   -moz-animation: letter 300ms ease 1.9s backwards;
   -o-animation: letter 300ms ease 1.9s backwards;
-  top: 11px;
-  left: 201px;
-  width: 35px;
-  height: 61px;
+  top: 15px;
+  left: 199px;
+  width: 36px;
+  height: 62px;
   background: url("../assets/p.svg") no-repeat;
 }
 
@@ -1067,10 +1067,10 @@ body {
   -ms-animation: letter 300ms ease 2s backwards;
   -moz-animation: letter 300ms ease 2s backwards;
   -o-animation: letter 300ms ease 2s backwards;
-  top: 12px;
+  top: 16px;
   left: 238px;
-  width: 36px;
-  height: 62px;
+  width: 33px;
+  height: 64px;
   background: url("../assets/e-a.svg") no-repeat;
 }
 
@@ -1080,10 +1080,10 @@ body {
   -ms-animation: letter 300ms ease 2.1s backwards;
   -moz-animation: letter 300ms ease 2.1s backwards;
   -o-animation: letter 300ms ease 2.1s backwards;
-  top: 15px;
-  left: 278px;
+  top: 19px;
+  left: 275px;
   width: 41px;
-  height: 65px;
+  height: 66px;
   background: url("../assets/r-b.svg") no-repeat;
 }
 
@@ -1093,10 +1093,10 @@ body {
   -ms-animation: letter 300ms ease 2.2s backwards;
   -moz-animation: letter 300ms ease 2.2s backwards;
   -o-animation: letter 300ms ease 2.2s backwards;
-  top: 22px;
-  left: 320px;
-  width: 42px;
-  height: 65px;
+  top: 25px;
+  left: 317px;
+  width: 38px;
+  height: 66px;
   background: url("../assets/e-b.svg") no-repeat;
 }
 
@@ -1106,10 +1106,10 @@ body {
   -ms-animation: letter 300ms ease 2.3s backwards;
   -moz-animation: letter 300ms ease 2.3s backwards;
   -o-animation: letter 300ms ease 2.3s backwards;
-  top: 31px;
-  left: 358px;
-  width: 48px;
-  height: 66px;
+  top: 32px;
+  left: 351px;
+  width: 45px;
+  height: 67px;
   background: url("../assets/z.svg") no-repeat;
 }
 
@@ -1120,9 +1120,9 @@ body {
   -moz-animation: letter 300ms ease 2.5s backwards;
   -o-animation: letter 300ms ease 2.5s backwards;
   top: 0px;
-  left: 257px;
-  width: 16px;
-  height: 11px;
+  left: 252px;
+  width: 18px;
+  height: 14px;
   background: url("../assets/accent.svg") no-repeat;
 }
 
@@ -1380,18 +1380,18 @@ body {
   position: relative;
   display: inline-block;
   margin-top: 20px;
-  width: 350px;
+  width: 340px;
   height: 48px;
   background-color: white;
   color: #D3E3C7;
   text-align: center;
   text-transform: uppercase;
-  font-size: 26px;
+  font-size: 24px;
   font-family: "adelle", serif;
   line-height: 51px;
 }
 .product-designer > .star-a {
-  left: 4%;
+  left: 5%;
   animation: star 500ms ease 2.6s backwards;
   -webkit-animation: star 500ms ease 2.6s backwards;
   -ms-animation: star 500ms ease 2.6s backwards;
@@ -1399,7 +1399,7 @@ body {
   -o-animation: star 500ms ease 2.6s backwards;
 }
 .product-designer > .star-b {
-  right: 4%;
+  right: 5%;
   animation: star 500ms ease 2.9s backwards;
   -webkit-animation: star 500ms ease 2.9s backwards;
   -ms-animation: star 500ms ease 2.9s backwards;
