@@ -141,12 +141,12 @@ body {
 }
 
 .linkedin {
-  animation: social 750ms ease 2.9s backwards;
-  -webkit-animation: social 750ms ease 2.9s backwards;
-  -ms-animation: social 750ms ease 2.9s backwards;
-  -moz-animation: social 750ms ease 2.9s backwards;
-  -o-animation: social 750ms ease 2.9s backwards;
-  background: url("../assets/linkedin.svg") no-repeat center center;
+  animation: linkedin 750ms ease 2.9s backwards;
+  -webkit-animation: linkedin 750ms ease 2.9s backwards;
+  -ms-animation: linkedin 750ms ease 2.9s backwards;
+  -moz-animation: linkedin 750ms ease 2.9s backwards;
+  -o-animation: linkedin 750ms ease 2.9s backwards;
+  background: url("../assets/linkedin.svg") no-repeat 55% 40%;
 }
 
 .dribbble {
@@ -164,7 +164,7 @@ body {
   -ms-animation: social 750ms ease 2.5s backwards;
   -moz-animation: social 750ms ease 2.5s backwards;
   -o-animation: social 750ms ease 2.5s backwards;
-  background: url("../assets/mail.svg") no-repeat center center;
+  background: url("../assets/mail.svg") no-repeat 36% center;
 }
 
 @-webkit-keyframes social {
@@ -174,7 +174,7 @@ body {
     -ms-transform: scale(0);
     -o-transform: scale(0);
     transform: scale(0);
-    background-position: center -60px;
+    background-position-y: -60px;
     opacity: 0;
   }
 
@@ -184,7 +184,7 @@ body {
     -ms-transform: scale(1);
     -o-transform: scale(1);
     transform: scale(1);
-    background-position: center -60px;
+    background-position-y: -60px;
     opacity: 1;
   }
 
@@ -194,7 +194,7 @@ body {
     -ms-transform: scale(1);
     -o-transform: scale(1);
     transform: scale(1);
-    background-position: center center;
+    background-position-y: center;
     opacity: 1;
   }
 }
@@ -206,7 +206,7 @@ body {
     -ms-transform: scale(0);
     -o-transform: scale(0);
     transform: scale(0);
-    background-position: center -60px;
+    background-position-y: -60px;
     opacity: 0;
   }
 
@@ -216,7 +216,7 @@ body {
     -ms-transform: scale(1);
     -o-transform: scale(1);
     transform: scale(1);
-    background-position: center -60px;
+    background-position-y: -60px;
     opacity: 1;
   }
 
@@ -226,7 +226,7 @@ body {
     -ms-transform: scale(1);
     -o-transform: scale(1);
     transform: scale(1);
-    background-position: center center;
+    background-position-y: center;
     opacity: 1;
   }
 }
@@ -238,7 +238,7 @@ body {
     -ms-transform: scale(0);
     -o-transform: scale(0);
     transform: scale(0);
-    background-position: center -60px;
+    background-position-y: -60px;
     opacity: 0;
   }
 
@@ -248,7 +248,7 @@ body {
     -ms-transform: scale(1);
     -o-transform: scale(1);
     transform: scale(1);
-    background-position: center -60px;
+    background-position-y: -60px;
     opacity: 1;
   }
 
@@ -258,7 +258,103 @@ body {
     -ms-transform: scale(1);
     -o-transform: scale(1);
     transform: scale(1);
-    background-position: center center;
+    background-position-y: center;
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes linkedin {
+  0% {
+    -webkit-transform: scale(0);
+    -moz-transform: scale(0);
+    -ms-transform: scale(0);
+    -o-transform: scale(0);
+    transform: scale(0);
+    background-position-y: -60px;
+    opacity: 0;
+  }
+
+  50% {
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+    background-position-y: -60px;
+    opacity: 1;
+  }
+
+  100% {
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+    background-position-y: 40%;
+    opacity: 1;
+  }
+}
+
+@-moz-keyframes linkedin {
+  0% {
+    -webkit-transform: scale(0);
+    -moz-transform: scale(0);
+    -ms-transform: scale(0);
+    -o-transform: scale(0);
+    transform: scale(0);
+    background-position-y: -60px;
+    opacity: 0;
+  }
+
+  50% {
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+    background-position-y: -60px;
+    opacity: 1;
+  }
+
+  100% {
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+    background-position-y: 40%;
+    opacity: 1;
+  }
+}
+
+@keyframes linkedin {
+  0% {
+    -webkit-transform: scale(0);
+    -moz-transform: scale(0);
+    -ms-transform: scale(0);
+    -o-transform: scale(0);
+    transform: scale(0);
+    background-position-y: -60px;
+    opacity: 0;
+  }
+
+  50% {
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+    background-position-y: -60px;
+    opacity: 1;
+  }
+
+  100% {
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+    background-position-y: 40%;
     opacity: 1;
   }
 }
