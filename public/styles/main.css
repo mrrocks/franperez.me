@@ -136,7 +136,7 @@ body {
   -ms-animation: social 750ms ease 3.1s backwards;
   -moz-animation: social 750ms ease 3.1s backwards;
   -o-animation: social 750ms ease 3.1s backwards;
-  background: url('/public/assets/twitter.svg?1371044385') no-repeat center center;
+  background: url("../assets/twitter.svg") no-repeat center center;
 }
 
 .linkedin {
@@ -145,7 +145,7 @@ body {
   -ms-animation: social 750ms ease 2.9s backwards;
   -moz-animation: social 750ms ease 2.9s backwards;
   -o-animation: social 750ms ease 2.9s backwards;
-  background: url('/public/assets/linkedin.svg?1371044392') no-repeat center center;
+  background: url("../assets/linkedin.svg") no-repeat center center;
 }
 
 .dribbble {
@@ -154,7 +154,7 @@ body {
   -ms-animation: social 750ms ease 2.7s backwards;
   -moz-animation: social 750ms ease 2.7s backwards;
   -o-animation: social 750ms ease 2.7s backwards;
-  background: url('/public/assets/dribbble.svg?1371043285') no-repeat center center;
+  background: url("../assets/dribbble.svg") no-repeat center center;
 }
 
 .mail {
@@ -163,7 +163,7 @@ body {
   -ms-animation: social 750ms ease 2.5s backwards;
   -moz-animation: social 750ms ease 2.5s backwards;
   -o-animation: social 750ms ease 2.5s backwards;
-  background: url('/public/assets/mail.svg?1371044381') no-repeat center center;
+  background: url("../assets/mail.svg") no-repeat center center;
 }
 
 @-webkit-keyframes social {
@@ -271,7 +271,7 @@ body {
 }
 
 .grass__back {
-  background-image: url('/public/assets/grass-back.svg?1370811115');
+  background-image: url("../assets/grass-back.svg");
   animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 1s backwards;
   -webkit-animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 1s backwards;
   -ms-animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 1s backwards;
@@ -280,7 +280,7 @@ body {
 }
 
 .grass__medium {
-  background-image: url('/public/assets/grass-medium.svg?1370811125');
+  background-image: url("../assets/grass-medium.svg");
   animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 750ms backwards;
   -webkit-animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 750ms backwards;
   -ms-animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 750ms backwards;
@@ -289,7 +289,7 @@ body {
 }
 
 .grass__front {
-  background-image: url('/public/assets/grass-front.svg?1370811133');
+  background-image: url("../assets/grass-front.svg");
   animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 500ms backwards;
   -webkit-animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 500ms backwards;
   -ms-animation: grass-animation 750ms cubic-bezier(0.175, 0.885, 0.32, 1.275) 500ms backwards;
@@ -330,7 +330,7 @@ body {
 .cloud-a, .cloud-b, .cloud-c {
   position: absolute;
   z-index: 2;
-  background: url('/public/assets/cloud.svg?1370813611') no-repeat;
+  background: url("../assets/cloud.svg") no-repeat;
   background-size: cover;
 }
 
@@ -723,7 +723,7 @@ body {
   -moz-animation: corner 300ms ease 1.3s backwards;
   -o-animation: corner 300ms ease 1.3s backwards;
   left: -49px;
-  background: transparent url('/public/assets/corner-a.svg?1370988331') no-repeat;
+  background: transparent url("../assets/corner-a.svg") no-repeat;
 }
 .iam > .corner-b {
   animation: corner 300ms ease 1.5s backwards;
@@ -732,7 +732,7 @@ body {
   -moz-animation: corner 300ms ease 1.5s backwards;
   -o-animation: corner 300ms ease 1.5s backwards;
   right: -50px;
-  background: transparent url('/public/assets/corner-b.svg?1370988319') no-repeat;
+  background: transparent url("../assets/corner-b.svg") no-repeat;
 }
 
 .iam > .star-a, .iam > .star-b {
@@ -1196,7 +1196,7 @@ body {
   display: inline-block;
   width: 134px;
   height: 40px;
-  background: url('/public/assets/working-as.svg?1371029402') no-repeat;
+  background: url("../assets/working-as.svg") no-repeat;
 }
 
 .line-left, .line-right {
@@ -1420,7 +1420,7 @@ body {
   -moz-animation: corner-b 300ms ease 2.4s backwards;
   -o-animation: corner-b 300ms ease 2.4s backwards;
   left: -49px;
-  background: transparent url('/public/assets/corner-c.svg?1371035820') no-repeat;
+  background: transparent url("../assets/corner-c.svg") no-repeat;
 }
 .product-designer > .corner-b {
   animation: corner-b 300ms ease 2.5s backwards;
@@ -1429,7 +1429,7 @@ body {
   -moz-animation: corner-b 300ms ease 2.5s backwards;
   -o-animation: corner-b 300ms ease 2.5s backwards;
   right: -50px;
-  background: transparent url('/public/assets/corner-d.svg?1371035820') no-repeat;
+  background: transparent url("../assets/corner-d.svg") no-repeat;
 }
 
 @-webkit-keyframes grow-b {
