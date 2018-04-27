@@ -857,8 +857,8 @@ body {
   text-align: center;
   text-transform: uppercase;
   font-size: 20px;
-  font-family: "adelle", serif;
-  line-height: 43px;
+  font-family: 'Roboto Slab', serif;
+  line-height: 38px;
 }
 .iam > .star-a {
   animation: star 500ms ease 1.6s backwards;
@@ -946,7 +946,7 @@ body {
 
   100% {
     color: #C0DCC4;
-    line-height: 43px;
+    line-height: 38px;
   }
 }
 
@@ -1547,8 +1547,8 @@ body {
   text-align: center;
   text-transform: uppercase;
   font-size: 24px;
-  font-family: "adelle", serif;
-  line-height: 51px;
+  font-family: 'Roboto Slab', serif;
+  line-height: 49px;
 }
 .product-designer > .star-a {
   left: 5%;
@@ -1625,7 +1625,7 @@ body {
 
   100% {
     color: #D3E3C7;
-    line-height: 51px;
+    line-height: 49px;
   }
 }
 
