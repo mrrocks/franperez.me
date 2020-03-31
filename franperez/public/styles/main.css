@@ -1,3 +1,4 @@
+
 .blobs {
   position: absolute;
   width: 100%;
@@ -6,13 +7,18 @@
   pointer-events: none;
   overflow: hidden;
 }
-  .blobs DIV:before, .blobs DIV:after {
+  .blobs DIV {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+  }
+  .blobs DIV:before {
     position: absolute;
     opacity: 0.1;
     content:"";
     display: block;
     transform-style: preserve-3d;
-    animation: rotation 120s linear infinite;
+    animation: rotation 140s linear infinite;
   }
 
   @keyframes rotation {
@@ -27,44 +33,67 @@
     }
   }
 
-  .top:before {
-    background: url(../assets/top-left.svg);
-    width: 993px;
-    height: 996px;
-    top: -320px;
-    left: -416px;
+  .top-left {
+    top: 0px;
+    left: 0px;
   }
+      .top-left:before {
+        background: url(../assets/top-left.svg) no-repeat;
+        background-size: 100%;
+        width: 993px;
+        height: 996px;
+        top: -90%;
+        right: 10%;
+      }
 
-  .top:after {
-    background: url(../assets/top-right.svg);
-    width: 725px;
-    height: 543px;
-    top: -252px;
-    right: -180px;
+  .top-right {
+    top: 0px;
+    right: 0px;
   }
+    .top-right:before {
+      background: url(../assets/top-right.svg) no-repeat;
+      background-size: 100%;
+      width: 725px;
+      height: 543px;
+      top: -50%;
+      left: 20%;
+    }
 
-  .bottom:before {
-    background: url(../assets/bottom-left.svg);
-    width: 693px;
-    height: 657px;
-    bottom: -220px;
-    left: -116px;
+  .bottom-left {
+    bottom: 0px;
+    left: 0px;
   }
-
-  .bottom:after {
-    background: url(../assets/bottom-right.svg);
-    width: 1041px;
-    height: 1199px;
-    bottom: -592px;
-    right: -232px;
+    .bottom-left:before {
+      background: url(../assets/bottom-left.svg) no-repeat;
+      background-size: 100%;
+      width: 693px;
+      height: 657px;
+      bottom: -60%;
+      right: 20%;
+    }
+ 
+  .bottom-right {
+    bottom: 0px;
+    right: 0px;
   }
+    .bottom-right:before {
+      background: url(../assets/bottom-right.svg) no-repeat;
+      background-size: 100%;
+      width: 1041px;
+      height: 1199px;
+      bottom: -120%;
+      left: 0%;
+    }
 
   SECTION {
     width: 80%;
-    margin: 0 auto;
+    min-width: 1100px;
+    margin: auto;
     display: grid;
     grid-template-columns: 50% 50%;
     max-width: 1200px;
+    top: 0; left: 0; bottom: 0; right: 0;
+    position: absolute;
   }
 
   .info, IMG {
@@ -99,4 +128,14 @@
       width: 580px;
     }
 
-  
+.links {
+  font: 600 14px/32px 'Barlow Semi Condensed', sans-serif;
+  color: #0D25F9;
+  box-sizing: border-box;
+  padding: 40px 58px;
+  margin-top: 68px;
+  display: block;
+  width: 172px;
+  height: 172px;
+  background: url(../assets/links.svg);
+}
