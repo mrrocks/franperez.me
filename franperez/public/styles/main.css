@@ -1,0 +1,102 @@
+.blobs {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  pointer-events: none;
+  overflow: hidden;
+}
+  .blobs DIV:before, .blobs DIV:after {
+    position: absolute;
+    opacity: 0.1;
+    content:"";
+    display: block;
+    transform-style: preserve-3d;
+    animation: rotation 120s linear infinite;
+  }
+
+  @keyframes rotation {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    50% {
+      transform: scale(1.2) rotate(180deg);
+    }
+    100% {
+      transform: scale(1) rotate(360deg);
+    }
+  }
+
+  .top:before {
+    background: url(../assets/top-left.svg);
+    width: 993px;
+    height: 996px;
+    top: -320px;
+    left: -416px;
+  }
+
+  .top:after {
+    background: url(../assets/top-right.svg);
+    width: 725px;
+    height: 543px;
+    top: -252px;
+    right: -180px;
+  }
+
+  .bottom:before {
+    background: url(../assets/bottom-left.svg);
+    width: 693px;
+    height: 657px;
+    bottom: -220px;
+    left: -116px;
+  }
+
+  .bottom:after {
+    background: url(../assets/bottom-right.svg);
+    width: 1041px;
+    height: 1199px;
+    bottom: -592px;
+    right: -232px;
+  }
+
+  SECTION {
+    width: 80%;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    max-width: 1200px;
+  }
+
+  .info, IMG {
+    align-self: center;
+    min-width: 475px;
+  }
+
+    h2 {
+      font: 300 64px/64px 'Barlow Semi Condensed', sans-serif;
+      color: #F7A8A8;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+    }
+
+    h1{
+      font: 600 72px/72px 'Barlow Semi Condensed', sans-serif;
+      letter-spacing: -1px;
+      color: #0D25F9;
+      margin-bottom: 78px;
+    }
+
+    p {
+      font: 300 18px/32px 'Barlow', sans-serif;
+      color: rgba(0, 0, 0, 0.8);
+      margin-bottom: 32px;
+    }
+
+    p b {font-weight: 500;}
+
+    IMG {
+      justify-self: end;
+      width: 580px;
+    }
+
+  
