@@ -6,11 +6,14 @@
   top: 0px;
   pointer-events: none;
   overflow: hidden;
+  z-index: 0;
 }
   .blobs DIV {
     position: absolute;
     width: 50%;
     height: 50%;
+    background-blend-mode: screen;
+    mix-blend-mode: screen; 
   }
   .blobs DIV:before {
     position: absolute;
@@ -18,15 +21,23 @@
     content:"";
     display: block;
     transform-style: preserve-3d;
-    animation: rotation 140s linear infinite;
+    animation: rotation 60s linear infinite;
+    will-change: transform;
+    
   }
 
   @keyframes rotation {
     0% {
       transform: scale(1) rotate(0deg);
     }
+    25% {
+      transform: scale(1.15) rotate(90deg);
+    }
     50% {
-      transform: scale(1.2) rotate(180deg);
+      transform: scale(1) rotate(180deg);
+    }
+    75% {
+      transform: scale(1.15) rotate(270deg);
     }
     100% {
       transform: scale(1) rotate(360deg);
@@ -40,10 +51,12 @@
       .top-left:before {
         background: url(../assets/top-left.svg) no-repeat;
         background-size: 100%;
-        width: 993px;
-        height: 996px;
-        top: -90%;
+        width: 1200px;
+        height: 1200px;
+        top: -110%;
         right: 10%;
+        animation-delay: 250ms;
+        animation-direction: reverse;
       }
 
   .top-right {
@@ -53,10 +66,11 @@
     .top-right:before {
       background: url(../assets/top-right.svg) no-repeat;
       background-size: 100%;
-      width: 725px;
-      height: 543px;
-      top: -50%;
-      left: 20%;
+      width: 900px;
+      height: 900px;
+      top: -82%;
+      left: 10%;
+      animation-delay: 500ms;
     }
 
   .bottom-left {
@@ -66,10 +80,11 @@
     .bottom-left:before {
       background: url(../assets/bottom-left.svg) no-repeat;
       background-size: 100%;
-      width: 693px;
-      height: 657px;
-      bottom: -60%;
-      right: 20%;
+      width: 900px;
+      height: 900px;
+      bottom: -112%;
+      right: 10%;
+      animation-direction: reverse;
     }
  
   .bottom-right {
@@ -79,10 +94,11 @@
     .bottom-right:before {
       background: url(../assets/bottom-right.svg) no-repeat;
       background-size: 100%;
-      width: 1041px;
-      height: 1199px;
-      bottom: -120%;
+      width: 1200px;
+      height: 1200px;
+      bottom: -140%;
       left: 0%;
+      animation-delay: 750ms;
     }
 
   SECTION {
@@ -94,6 +110,7 @@
     max-width: 1200px;
     top: 0; left: 0; bottom: 0; right: 0;
     position: absolute;
+    z-index: 1;
   }
 
   .info, IMG {
@@ -113,7 +130,19 @@
       letter-spacing: -1px;
       color: #0D25F9;
       margin-bottom: 78px;
+      position: relative;
     }
+
+      h1:after {
+        content: "";
+        display: block;
+        background: url(../assets/mini-blobs.svg) no-repeat;
+        width: 38px;
+        height: 52px;
+        position: absolute;
+        left: 326px;
+        top: -19px;
+      }
 
     p {
       font: 300 18px/32px 'Barlow', sans-serif;
@@ -137,5 +166,35 @@
   display: block;
   width: 172px;
   height: 172px;
-  background: url(../assets/links.svg);
+  background: url(../assets/links.svg) no-repeat;
+  margin-left: -58px;
 }
+
+.links a, .links a:active {
+  color: #0D25F9;
+}
+
+.mail {
+  background-position-x: -172px;
+}
+
+.twitter {
+  background-position-x: -344px;
+}
+
+.linkedin {
+  background-position-x: -516px;
+}
+
+/* // Small devices (landscape phones, 576px and up)
+@media (min-width: 576px) { ... }
+
+// Medium devices (tablets, 768px and up)
+@media (min-width: 768px) { ... }
+
+// Large devices (desktops, 992px and up)
+@media (min-width: 1440px) { ... }
+
+// Extra large devices (large desktops, 1200px and up)
+@media (min-width: 1440px) { ... } */
+
