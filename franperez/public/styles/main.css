@@ -21,7 +21,7 @@
     content:"";
     display: block;
     transform-style: preserve-3d;
-    animation: rotation 60s linear infinite;
+    /* animation: rotation 60s linear infinite; */
     will-change: transform;
     
   }
@@ -53,8 +53,6 @@
         background-size: 100%;
         width: 1200px;
         height: 1200px;
-        top: -110%;
-        right: 10%;
         animation-delay: 250ms;
         animation-direction: reverse;
       }
@@ -68,8 +66,6 @@
       background-size: 100%;
       width: 900px;
       height: 900px;
-      top: -82%;
-      left: 10%;
       animation-delay: 500ms;
     }
 
@@ -82,8 +78,6 @@
       background-size: 100%;
       width: 900px;
       height: 900px;
-      bottom: -112%;
-      right: 10%;
       animation-direction: reverse;
     }
  
@@ -96,8 +90,6 @@
       background-size: 100%;
       width: 1200px;
       height: 1200px;
-      bottom: -140%;
-      left: 0%;
       animation-delay: 750ms;
     }
 
@@ -155,6 +147,7 @@
     IMG {
       justify-self: end;
       width: 580px;
+      margin-right: -40px;
     }
 
 .links {
@@ -162,7 +155,7 @@
   color: #0D25F9;
   box-sizing: border-box;
   padding: 40px 58px;
-  margin-top: 68px;
+  margin-top: 79px;
   display: block;
   width: 172px;
   height: 172px;
@@ -190,11 +183,72 @@
 @media (min-width: 576px) { ... }
 
 // Medium devices (tablets, 768px and up)
-@media (min-width: 768px) { ... }
+@media (min-width: 768px) { ... } */
 
-// Large devices (desktops, 992px and up)
-@media (min-width: 1440px) { ... }
 
-// Extra large devices (large desktops, 1200px and up)
-@media (min-width: 1440px) { ... } */
+@media (min-width: 0px) {
+  .top-left:before {
+    top: -180%;
+    right: 10%;
+  }
+
+  .top-right:before {
+    top: -134%;
+    left: 10%;
+  }
+
+  .bottom-left:before {
+    bottom: -170%;
+    right: 10%;
+  }
+
+  .bottom-right:before {
+    bottom: -200%;
+    left: -16%;
+  }
+}
+
+@media (min-width: 1650px) {
+  .top-left:before {
+    top: -130%;
+    right: 10%;
+  }
+
+  .top-right:before {
+    top: -100%;
+    left: 10%;
+  }
+
+  .bottom-left:before {
+    bottom: -130%;
+    right: 10%;
+  }
+
+  .bottom-right:before {
+    bottom: -160%;
+    left: -8%;
+  }
+}
+
+@media (min-width: 2000px) {
+  .top-left:before {
+    top: -60%;
+    right: 10%;
+  }
+
+  .top-right:before {
+    top: -40%;
+    left: 10%;
+  }
+
+  .bottom-left:before {
+    bottom: -70%;
+    right: 10%;
+  }
+
+  .bottom-right:before {
+    bottom: -90%;
+    left: 0%;
+  }
+}
 
