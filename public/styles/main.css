@@ -3,19 +3,16 @@
 }
 
 .blobs {
-  position: absolute;
+  position: fixed;
   width: 100%;
   height: 100%;
-  top: 0px;
   pointer-events: none;
-  overflow: hidden;
   z-index: 0;
 }
   .blobs DIV {
     position: absolute;
     width: 50%;
     height: 50%;
-    background-blend-mode: screen;
   }
   .blobs DIV:before {
     position: absolute;
@@ -114,20 +111,29 @@
     }
 
   SECTION {
-    width: 80%;
-    min-width: 1100px;
-    margin: auto;
-    display: grid;
-    grid-template-columns: 50% 50%;
-    max-width: 1200px;
-    top: 0; left: 0; bottom: 0; right: 0;
+    width: 1092px;
+    height: 620px;
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 1;
   }
 
+    SECTION:after {
+      content:"";
+      position: absolute;
+      top: -40px;
+      right: -68px;
+      display: block;
+      width: 580px;
+      height: 720px;
+      background: url(../assets/illustration.svg) no-repeat right;
+    }
+
   .info, IMG {
     align-self: center;
-    min-width: 475px;
+    margin-top: 60px;
   }
 
     h2 {
@@ -141,7 +147,7 @@
       font: 600 72px/72px 'Barlow Semi Condensed', sans-serif;
       letter-spacing: -1px;
       color: #0D25F9;
-      margin-bottom: 78px;
+      margin-bottom: 47px;
       position: relative;
     }
 
@@ -175,7 +181,7 @@
   color: #0D25F9;
   box-sizing: border-box;
   padding: 40px 58px;
-  margin-top: 79px;
+  margin-top: 49px;
   display: block;
   width: 172px;
   height: 172px;
