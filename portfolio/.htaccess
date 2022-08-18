@@ -1,0 +1,1 @@
+RewriteRule ^url-string-to-redirect$ https://www.figma.com/proto/KHOjcIwEfpsTu2FlZ0Wl4s/Portfolio?page-id=0%3A1&node-id=0%3A3&starting-point-node-id=0%3A3 [R=301,L]
