@@ -26,8 +26,7 @@
 <path fill-rule="evenodd" clip-rule="evenodd" d="M360 576C368.837 576 376 568.837 376 560H344C344 568.837 351.163 576 360 576Z" fill="#6439ED"/>
 <mask id="mask0_207_15047" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="234" y="434" width="126" height="126">
 <path d="M360 434V560H234L360 434Z" fill="#FBB5B5"/>
-</mask>
-<g mask="url(#mask0_207_15047)">
+</mask><g mask="url(#mask0_207_15047)">
 <path d="M360 434V560H234L360 434Z" fill="#F7C595"/>
 <ellipse cx="360.5" cy="560" rx="38.5" ry="38" fill="#ACFED4"/>
 <circle cx="360" cy="560" r="16" fill="#8083CF"/>
