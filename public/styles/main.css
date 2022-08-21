@@ -2,6 +2,10 @@
   --duration: 40s;
 }
 
+BODY {
+  line-height: 1;
+}
+
 .blobs {
   position: fixed;
   width: 100%;
@@ -69,6 +73,7 @@
   animation: rotation-down var(--duration) linear infinite;
   animation-delay: 250ms;
   animation-direction: reverse;
+  will-change: transform;
 }
 
 .top-right {
@@ -82,6 +87,7 @@
   height: 900px;
   animation: rotation-up var(--duration) linear infinite;
   animation-delay: 500ms;
+  will-change: transform;
 }
 
 .bottom-left {
@@ -95,6 +101,7 @@
   height: 900px;
   animation: rotation-up var(--duration) linear infinite;
   animation-direction: reverse;
+  will-change: transform;
 }
 
 .bottom-right {
@@ -108,32 +115,26 @@
   height: 1200px;
   animation: rotation-down var(--duration) linear infinite;
   animation-delay: 750ms;
+  will-change: transform;
 }
 
 SECTION {
-  width: 1092px;
-  height: 620px;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  width: 1092px;
+  height: 620px;
   z-index: 1;
-  /* background-color: red; */
 }
 
-SECTION:after {
-  content: "";
+.illustration {
   position: absolute;
   top: 0;
   right: 0;
-  display: block;
-  width: 480px;
-  height: 620px;
-  background: url(../assets/illustration.svg) no-repeat;
 }
 
-SECTION:before {
-  content: "";
+.shadow {
   position: absolute;
   top: 4px;
   right: -4px;
@@ -143,6 +144,44 @@ SECTION:before {
   background: url(../assets/illustration.svg) no-repeat;
   filter: blur(24px);
   opacity: 0.4;
+}
+
+.base {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 480px;
+  height: 620px;
+  background: url(../assets/illustration-bottom.svg) no-repeat;
+}
+
+.waves {
+  position: absolute;
+  top: 320px;
+  right: 120px;
+  background: url(../assets/waves.svg) repeat;
+  width: 240px;
+  height: 240px;
+  animation: pattern linear 20s infinite;
+}
+
+@keyframes pattern {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 240px 240px;
+  }
+}
+
+.top {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: block;
+  width: 480px;
+  height: 620px;
+  background: url(../assets/illustration-top.svg) no-repeat;
 }
 
 .info,
@@ -178,7 +217,7 @@ h1:after {
 }
 
 p {
-  font: 300 18px/32px "Barlow", sans-serif;
+  font: 400 18px/32px "Barlow", sans-serif;
   color: rgba(0, 0, 0, 0.7);
   margin-bottom: 32px;
   font-weight: 400;
@@ -195,7 +234,7 @@ IMG {
 }
 
 .links {
-  font: 600 14px/32px "Barlow Semi Condensed", sans-serif;
+  font: 500 14px/32px "Barlow Semi Condensed", sans-serif;
   color: #6439ed;
   box-sizing: border-box;
   padding: 40px 58px;
@@ -245,48 +284,3 @@ IMG {
     left: -40px;
   }
 }
-/* 
-@media (min-width: 1650px) {
-  .top-left:before {
-    top: -130%;
-    right: 10%;
-  }
-
-  .top-right:before {
-    top: -100%;
-    left: 10%;
-  }
-
-  .bottom-left:before {
-    bottom: -130%;
-    right: 10%;
-  }
-
-  .bottom-right:before {
-    bottom: -160%;
-    left: -8%;
-  }
-}
-
-@media (min-width: 2000px) {
-  .top-left:before {
-    top: -60%;
-    right: 10%;
-  }
-
-  .top-right:before {
-    top: -40%;
-    left: 10%;
-  }
-
-  .bottom-left:before {
-    bottom: -70%;
-    right: 10%;
-  }
-
-  .bottom-right:before {
-    bottom: -90%;
-    left: 0%;
-  }
-}
- */

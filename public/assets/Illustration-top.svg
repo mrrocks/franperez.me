@@ -1,0 +1,35 @@
+<svg width="480" height="620" viewBox="0 0 480 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M120.5 320L97 402.5L156 377.5L120.5 320Z" fill="#A2F8CC"/>
+<path d="M120.5 320L66 393L97 402.5L120.5 320Z" fill="#B0FBD5"/>
+<path d="M156 377.5L120.5 320L194 362L156 377.5Z" fill="#D4FEE9"/>
+<path d="M156 377.5L240 426L194 362L156 377.5Z" fill="#B9FEDA"/>
+<path d="M156 377.5L240 426V440H206.5L156 377.5Z" fill="#94F4C3"/>
+<path d="M156 377.5L159 440H206.5L156 377.5Z" fill="#A2F8CC"/>
+<path d="M156 377.5L159 440H126L111 426.5L156 377.5Z" fill="#B0FBD5"/>
+<path d="M156 377.5L97 402.5L111 426.5L156 377.5Z" fill="#ACFED4"/>
+<path d="M67.5 440L97 402.5L111 426.5L72 440H67.5Z" fill="#C2FEE0"/>
+<path d="M67.5 440L97 402.5L66 393L67.5 440Z" fill="#D4FEE9"/>
+<path d="M0 437L66 393L67.5 440H40L0 437Z" fill="#C5FEE1"/>
+<path d="M0 437L66 393L54.5 329L0 437Z" fill="#B0FBD5"/>
+<path d="M47.5 320L54.5 329L0 437V320H47.5Z" fill="#A2F8CC"/>
+<path d="M120.5 320L66 393L54.5 329L120.5 320Z" fill="#C5FEE1"/>
+<path d="M120.5 320H63L54.5 329L120.5 320Z" fill="#B9FEDA"/>
+<path d="M47.5 320H63L54.5 329L47.5 320Z" fill="#B0FBD5"/>
+<path d="M0 437V440H40L0 437Z" fill="#A2F8CC"/>
+<path d="M72 440H126L111 426.5L72 440Z" fill="#A2F8CC"/>
+<path d="M187 320H120.5L194 362L187 320Z" fill="#B9FEDA"/>
+<path d="M187 320H240V332.5L194 362L187 320Z" fill="#C5FEE1"/>
+<path d="M240 365.5V332.5L194 362L240 365.5Z" fill="#94F4C3"/>
+<path d="M240 365.5V426L194 362L240 365.5Z" fill="#B0FBD5"/>
+<rect x="44" y="426" width="28" height="28" rx="14" fill="#6439ED"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M96 440H44C44 425.641 55.6406 414 70 414C84.3594 414 96 425.641 96 440Z" fill="#F7C595"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M360 576C368.837 576 376 568.837 376 560H344C344 568.837 351.163 576 360 576Z" fill="#6439ED"/>
+<mask id="mask0_207_15047" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="234" y="434" width="126" height="126">
+<path d="M360 434V560H234L360 434Z" fill="#FBB5B5"/>
+</mask>
+<g mask="url(#mask0_207_15047)">
+<path d="M360 434V560H234L360 434Z" fill="#F7C595"/>
+<ellipse cx="360.5" cy="560" rx="38.5" ry="38" fill="#ACFED4"/>
+<circle cx="360" cy="560" r="16" fill="#8083CF"/>
+</g>
+</svg>
