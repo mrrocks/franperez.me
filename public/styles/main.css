@@ -152,7 +152,7 @@ SECTION {
   right: 0;
   width: 480px;
   height: 620px;
-  background: url(../assets/illustration-bottom.svg) no-repeat;
+  background: url(../assets/illustration-b.svg) no-repeat;
 }
 
 .waves {
@@ -181,7 +181,7 @@ SECTION {
   display: block;
   width: 480px;
   height: 620px;
-  background: url(../assets/illustration-top.svg) no-repeat;
+  background: url(../assets/illustration-t.svg) no-repeat;
 }
 
 .info,
