@@ -141,7 +141,7 @@ SECTION {
   display: block;
   width: 480px;
   height: 620px;
-  background: url(../assets/illustration.svg) no-repeat;
+  background: url(../assets/illus.svg) no-repeat;
   filter: blur(24px);
   opacity: 0.4;
 }
@@ -152,7 +152,7 @@ SECTION {
   right: 0;
   width: 480px;
   height: 620px;
-  background: url(../assets/illustration-b.svg) no-repeat;
+  background: url(../assets/illus-b.svg) no-repeat;
 }
 
 .waves {
@@ -181,7 +181,7 @@ SECTION {
   display: block;
   width: 480px;
   height: 620px;
-  background: url(../assets/illustration-t.svg) no-repeat;
+  background: url(../assets/illus-t.svg) no-repeat;
 }
 
 .info,
