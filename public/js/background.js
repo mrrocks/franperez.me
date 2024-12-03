@@ -11,31 +11,31 @@ const CANVAS = {
   POINTS: 14,
   MIN_COLLISION_DIST: 28,
   BLOB_COUNT: 4,
-  BASE_RADIUS: 0.4
+  BASE_RADIUS: 0.4,
 };
 
 const QUADRANT_CONFIG = [
-  { pos: [0, 0], size: 1, color: "#F7C59520" },
-  { pos: [1, 0], size: 1, color: "#F97F9C20" },
-  { pos: [0, 1], size: 1, color: "#ACFED430" },
-  { pos: [1, 1], size: 1, color: "#8083CF20" },
+  { pos: [0, 0], size: 1, color: "#F7C595", alpha: "18" },
+  { pos: [1, 0], size: 1, color: "#F97F9C", alpha: "18" },
+  { pos: [0, 1], size: 1, color: "#ACFED4", alpha: "24" },
+  { pos: [1, 1], size: 1, color: "#8083CF", alpha: "18" },
 ];
 
 const BLOB_SETTINGS = {
   spin: {
     base: 0.004,
-    random: 0.004
+    random: 0.004,
   },
   pulse: {
     base: 0.02,
     range: 0.03,
-    scale: 1
+    scale: 1,
   },
   drift: {
     speed: 0.0008,
     pull: 0.2,
     ease: 0.06,
-    limit: 0.7
+    limit: 0.7,
   },
   morph: {
     amount: 0.02,
@@ -43,23 +43,22 @@ const BLOB_SETTINGS = {
     speed: 0.9,
     wave: {
       secondary: 0.7,
-      frequency: 1.5
-    }
+      frequency: 1.5,
+    },
   },
-  smooth: 0.18
+  smooth: 0.18,
+  colorTransition: {
+    speed: 0.001,
+    offset: Math.PI / 2,
+  },
 };
 
-// Add this utility function after the BLOB_SETTINGS definition
+// Canvas Utilities
+
 function isPointVisible(x, y, radius) {
-  return (
-    x + radius >= 0 &&
-    x - radius <= window.innerWidth &&
-    y + radius >= 0 &&
-    y - radius <= window.innerHeight
-  );
+  return x + radius >= 0 && x - radius <= window.innerWidth && y + radius >= 0 && y - radius <= window.innerHeight;
 }
 
-// Canvas Utilities
 function updateCanvasSize() {
   canvas.width = window.innerWidth * DPR;
   canvas.height = window.innerHeight * DPR;
@@ -79,12 +78,12 @@ class Blob {
   }
 
   initializeProperties(i) {
-    const { pos, size, color } = QUADRANT_CONFIG[i];
+    const { pos, size, color, alpha } = QUADRANT_CONFIG[i];
     this.baseRadius = baseSize * CANVAS.BASE_RADIUS * size;
     this.color = color;
     this.points = new Float32Array(CANVAS.POINTS * 2);
     this.quadrantIndex = i;
-    
+
     this.rotation = Math.random() * CANVAS.TWO_PI;
     this.rotationSpeed = BLOB_SETTINGS.spin.random * (Math.random() - 0.5);
     this.time = Math.random() * CANVAS.TWO_PI;
@@ -95,6 +94,8 @@ class Blob {
     this.moveSpeed = BLOB_SETTINGS.drift.speed;
     this.pointOffsets = Array.from({ length: CANVAS.POINTS }, () => Math.random() * CANVAS.TWO_PI);
     this.distortionScale = BLOB_SETTINGS.morph.amount + Math.random() * BLOB_SETTINGS.morph.variety;
+    this.colorIndex = i;
+    this.colorTime = i * BLOB_SETTINGS.colorTransition.offset;
   }
 
   initializePosition() {
@@ -185,27 +186,29 @@ class Blob {
 
     const center = this.getQuadrantCenter();
     const moveRange = this.baseRadius * this.moveSpeed;
-    
+
     let targetX = this.x + Math.sin(this.time * 0.2 * this.freqOffset + this.phaseOffset) * moveRange;
     let targetY = this.y + Math.cos(this.time * 0.3 * this.freqOffset + this.phaseOffset) * moveRange;
-    
+
     const dx = center.x - this.x;
     const dy = center.y - this.y;
     const distToCenter = Math.sqrt(dx * dx + dy * dy);
     const maxDistance = this.baseRadius * BLOB_SETTINGS.drift.limit;
-    
+
     if (distToCenter > maxDistance * 0.5) {
-        const pullStrength = Math.min(1, (distToCenter - maxDistance * 0.5) / maxDistance);
-        const attraction = distToCenter * BLOB_SETTINGS.drift.pull * pullStrength;
-        targetX += (dx / distToCenter) * attraction;
-        targetY += (dy / distToCenter) * attraction;
+      const pullStrength = Math.min(1, (distToCenter - maxDistance * 0.5) / maxDistance);
+      const attraction = distToCenter * BLOB_SETTINGS.drift.pull * pullStrength;
+      targetX += (dx / distToCenter) * attraction;
+      targetY += (dy / distToCenter) * attraction;
     }
-    
+
     const { x, y } = this.handleCollisions(targetX, targetY, blobs, 3);
     this.x += (x - this.x) * BLOB_SETTINGS.drift.ease;
     this.y += (y - this.y) * BLOB_SETTINGS.drift.ease;
 
     this.updatePoints();
+    this.colorTime += BLOB_SETTINGS.colorTransition.speed;
+    this.updateColor();
   }
 
   updatePoints() {
@@ -231,7 +234,7 @@ class Blob {
     for (let i = 0; i < CANVAS.POINTS * 2; i += 2) {
       const nextI = (i + 2) % (CANVAS.POINTS * 2);
       const nextNextI = (i + 4) % (CANVAS.POINTS * 2);
-      const prevI = (i - 2 + (CANVAS.POINTS * 2)) % (CANVAS.POINTS * 2);
+      const prevI = (i - 2 + CANVAS.POINTS * 2) % (CANVAS.POINTS * 2);
 
       const controlInfluence = BLOB_SETTINGS.smooth * (this.radius / this.baseRadius);
 
@@ -245,6 +248,39 @@ class Blob {
 
     ctx.fillStyle = this.color;
     ctx.fill();
+  }
+
+  updateColor() {
+    const totalColors = QUADRANT_CONFIG.length;
+    const position = this.colorTime % (Math.PI * 2);
+    const currentIndex = Math.floor((position / (Math.PI * 2)) * totalColors);
+    const nextIndex = (currentIndex + 1) % totalColors;
+    const progress = ((position / (Math.PI * 2)) * totalColors) % 1;
+
+    const currentColor = this.hexToRgb(QUADRANT_CONFIG[currentIndex].color);
+    const nextColor = this.hexToRgb(QUADRANT_CONFIG[nextIndex].color);
+    const currentAlpha = parseInt(QUADRANT_CONFIG[currentIndex].alpha, 16) / 255;
+    const nextAlpha = parseInt(QUADRANT_CONFIG[nextIndex].alpha, 16) / 255;
+
+    const r = Math.round(this.lerp(currentColor.r, nextColor.r, progress));
+    const g = Math.round(this.lerp(currentColor.g, nextColor.g, progress));
+    const b = Math.round(this.lerp(currentColor.b, nextColor.b, progress));
+    const a = this.lerp(currentAlpha, nextAlpha, progress);
+
+    this.color = `rgba(${r}, ${g}, ${b}, ${a})`;
+  }
+
+  hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    };
+  }
+
+  lerp(start, end, t) {
+    return start * (1 - t) + end * t;
   }
 }
 
@@ -273,4 +309,3 @@ window.addEventListener("resize", () => {
 
 // Start Animation
 animate();
-
