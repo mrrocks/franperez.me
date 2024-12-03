@@ -1,9 +1,18 @@
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d", { alpha: false });
 
+const DPR = window.devicePixelRatio || 1;
+
+ctx.imageSmoothingEnabled = false;
+
 function updateCanvasSize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth * DPR;
+  canvas.height = window.innerHeight * DPR;
+
+  canvas.style.width = `${window.innerWidth}px`;
+  canvas.style.height = `${window.innerHeight}px`;
+
+  ctx.scale(DPR, DPR);
 
   return Math.min(window.innerWidth, window.innerHeight) * 1.65;
 }
@@ -13,10 +22,10 @@ let baseSize = updateCanvasSize();
 const colors = ["#F7C59520", "#F97F9C20", "#ACFED430", "#8083CF20"];
 
 const quadrants = [
-  [0, 0, 1],
-  [1, 0, 1],
-  [0, 1, 1.2],
-  [1, 1, 1.2],
+  [0, 0, 1.1], // top-left
+  [1, 0, 0.9], // top-right
+  [0, 1, 0.9], // bottom-left
+  [1, 1, 1.1], // bottom-right
 ];
 
 class Blob {
@@ -40,8 +49,11 @@ class Blob {
 
     // Initialize position without collision check
     const [xRatio, yRatio] = quadrants[i];
-    this.x = xRatio * canvas.width;
-    this.y = yRatio * canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    this.canvasWidth = canvas.width / dpr;
+    this.canvasHeight = canvas.height / dpr;
+    this.x = xRatio * this.canvasWidth;
+    this.y = yRatio * this.canvasHeight;
     this.radius = this.baseRadius;
   }
 
@@ -70,8 +82,9 @@ class Blob {
 
   reset(i, otherBlobs) {
     const [xRatio, yRatio] = quadrants[i];
-    let newX = xRatio * canvas.width;
-    let newY = yRatio * canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    let newX = (xRatio * canvas.width) / dpr;
+    let newY = (yRatio * canvas.height) / dpr;
     this.radius = this.baseRadius;
 
     let attempts = 0;
@@ -83,15 +96,19 @@ class Blob {
       attempts++;
     }
 
-    this.x = Math.max(-this.baseRadius, Math.min(canvas.width + this.baseRadius, newX));
-    this.y = Math.max(-this.baseRadius, Math.min(canvas.height + this.baseRadius, newY));
+    const maxX = canvas.width / DPR + this.baseRadius;
+    const maxY = canvas.height / DPR + this.baseRadius;
+
+    this.x = Math.max(-this.baseRadius, Math.min(maxX, newX));
+    this.y = Math.max(-this.baseRadius, Math.min(maxY, newY));
   }
 
   getQuadrantCenter() {
     const [x, y] = quadrants[this.quadrantIndex];
+    const dpr = window.devicePixelRatio || 1;
     return {
-      x: x * canvas.width,
-      y: y * canvas.height,
+      x: (x * canvas.width) / dpr,
+      y: (y * canvas.height) / dpr,
     };
   }
 
@@ -131,9 +148,10 @@ class Blob {
     const angleStep = (Math.PI * 2) / 12;
     for (let i = 0; i < 12; i++) {
       const angle = i * angleStep + this.rotation;
+      const timeBase = this.time * 0.8;
       const distortion =
-        Math.sin(this.time * 0.8 + this.pointOffsets[i]) * this.distortionScale +
-        Math.sin(this.time * 1.2 + this.pointOffsets[(i + 3) % 12]) * (this.distortionScale * 0.7);
+        Math.sin(timeBase + this.pointOffsets[i]) * this.distortionScale +
+        Math.sin(timeBase * 1.5 + this.pointOffsets[(i + 3) % 12]) * (this.distortionScale * 0.7);
       const dist = this.radius * (0.97 + distortion);
 
       this.points[i * 2] = this.x + Math.cos(angle) * dist;
