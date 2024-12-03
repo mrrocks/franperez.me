@@ -255,19 +255,32 @@ class Blob {
     const position = this.colorTime % (Math.PI * 2);
     const currentIndex = Math.floor((position / (Math.PI * 2)) * totalColors);
     const nextIndex = (currentIndex + 1) % totalColors;
-    const progress = ((position / (Math.PI * 2)) * totalColors) % 1;
+
+    // Using sine for smoother transitions
+    const progress = (1 - Math.cos((((position / (Math.PI * 2)) * totalColors) % 1) * Math.PI)) / 2;
 
     const currentColor = this.hexToRgb(QUADRANT_CONFIG[currentIndex].color);
     const nextColor = this.hexToRgb(QUADRANT_CONFIG[nextIndex].color);
     const currentAlpha = parseInt(QUADRANT_CONFIG[currentIndex].alpha, 16) / 255;
     const nextAlpha = parseInt(QUADRANT_CONFIG[nextIndex].alpha, 16) / 255;
 
-    const r = Math.round(this.lerp(currentColor.r, nextColor.r, progress));
-    const g = Math.round(this.lerp(currentColor.g, nextColor.g, progress));
-    const b = Math.round(this.lerp(currentColor.b, nextColor.b, progress));
-    const a = this.lerp(currentAlpha, nextAlpha, progress);
+    // Using HSL internally for better color blending
+    const currentHSL = this.rgbToHsl(currentColor.r, currentColor.g, currentColor.b);
+    const nextHSL = this.rgbToHsl(nextColor.r, nextColor.g, nextColor.b);
 
-    this.color = `rgba(${r}, ${g}, ${b}, ${a})`;
+    // Ensure we take the shortest path around the color wheel
+    let hueDiff = nextHSL.h - currentHSL.h;
+    if (Math.abs(hueDiff) > 0.5) {
+      hueDiff = hueDiff > 0 ? hueDiff - 1 : hueDiff + 1;
+    }
+
+    const hue = currentHSL.h + hueDiff * progress;
+    const saturation = this.lerp(currentHSL.s, nextHSL.s, progress);
+    const lightness = this.lerp(currentHSL.l, nextHSL.l, progress);
+    const alpha = this.lerp(currentAlpha, nextAlpha, progress);
+
+    const rgb = this.hslToRgb(hue < 0 ? hue + 1 : hue % 1, saturation, lightness);
+    this.color = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
   }
 
   hexToRgb(hex) {
@@ -281,6 +294,66 @@ class Blob {
 
   lerp(start, end, t) {
     return start * (1 - t) + end * t;
+  }
+
+  rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h,
+      s,
+      l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r:
+          h = (g - b) / d + (g < b ? 6 : 0);
+          break;
+        case g:
+          h = (b - r) / d + 2;
+          break;
+        case b:
+          h = (r - g) / d + 4;
+          break;
+      }
+      h /= 6;
+    }
+    return { h, s, l };
+  }
+
+  hslToRgb(h, s, l) {
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+      };
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1 / 3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1 / 3);
+    }
+
+    return {
+      r: Math.round(r * 255),
+      g: Math.round(g * 255),
+      b: Math.round(b * 255),
+    };
   }
 }
 
