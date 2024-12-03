@@ -4,51 +4,60 @@ const ctx = canvas.getContext("2d", { alpha: false });
 const DPR = window.devicePixelRatio || 1;
 ctx.imageSmoothingEnabled = false;
 
-// Constants
-const TWO_PI = Math.PI * 2;
-const CANVAS_SCALE = 1.65;
-const POINTS_COUNT = 12;
-const POINT_ARRAY_SIZE = POINTS_COUNT * 2;
-const MIN_COLLISION_DISTANCE = 24;
-const BLOB_COUNT = 4;
-const BASE_RADIUS_MULTIPLIER = 0.4;
-
 // Configuration
+const CANVAS = {
+  TWO_PI: Math.PI * 2,
+  SCALE: 1.65,
+  POINTS: 14,
+  MIN_COLLISION_DIST: 28,
+  BLOB_COUNT: 4,
+  BASE_RADIUS: 0.4
+};
+
 const QUADRANT_CONFIG = [
-  { pos: [0, 0], size: 1.1, color: "#F7C59520" },
-  { pos: [1, 0], size: 0.9, color: "#F97F9C20" },
-  { pos: [0, 1], size: 0.9, color: "#ACFED430" },
-  { pos: [1, 1], size: 1.1, color: "#8083CF20" },
+  { pos: [0, 0], size: 1, color: "#F7C59520" },
+  { pos: [1, 0], size: 1, color: "#F97F9C20" },
+  { pos: [0, 1], size: 1, color: "#ACFED430" },
+  { pos: [1, 1], size: 1, color: "#8083CF20" },
 ];
 
 const BLOB_SETTINGS = {
-  ROTATION: {
-    SPEED_RANGE: 0.002,
-    BASE_SPEED: 0.003,
+  spin: {
+    base: 0.004,
+    random: 0.004
   },
-  SIZE: {
-    MIN_VARIATION: 0.02,
-    VARIATION_RANGE: 0.03,
-    SCALE: 0.97,
+  pulse: {
+    base: 0.02,
+    range: 0.03,
+    scale: 1
   },
-  MOVEMENT: {
-    MIN_SPEED: 0.001,
-    SPEED_RANGE: 0.001,
-    CENTER_ATTRACTION: 0.03,
-    MAX_DISTANCE_MULTIPLIER: 1.2,
-    SMOOTHING: 0.05,
+  drift: {
+    speed: 0.0008,
+    pull: 0.2,
+    ease: 0.06,
+    limit: 0.7
   },
-  DISTORTION: {
-    MIN: 0.02,
-    RANGE: 0.015,
-    TIME_SCALE: 0.8,
-    SECONDARY_SCALE: 0.7,
-    TIME_MULTIPLIER: 1.5,
+  morph: {
+    amount: 0.02,
+    variety: 0.02,
+    speed: 0.9,
+    wave: {
+      secondary: 0.7,
+      frequency: 1.5
+    }
   },
-  CURVE: {
-    BASE_INFLUENCE: 0.18,
-  },
+  smooth: 0.18
 };
+
+// Add this utility function after the BLOB_SETTINGS definition
+function isPointVisible(x, y, radius) {
+  return (
+    x + radius >= 0 &&
+    x - radius <= window.innerWidth &&
+    y + radius >= 0 &&
+    y - radius <= window.innerHeight
+  );
+}
 
 // Canvas Utilities
 function updateCanvasSize() {
@@ -57,7 +66,7 @@ function updateCanvasSize() {
   canvas.style.width = `${window.innerWidth}px`;
   canvas.style.height = `${window.innerHeight}px`;
   ctx.scale(DPR, DPR);
-  return Math.min(window.innerWidth, window.innerHeight) * CANVAS_SCALE;
+  return Math.min(window.innerWidth, window.innerHeight) * CANVAS.SCALE;
 }
 
 let baseSize = updateCanvasSize();
@@ -70,30 +79,22 @@ class Blob {
   }
 
   initializeProperties(i) {
-    const {
-      pos: [x, y],
-      size,
-      color,
-    } = QUADRANT_CONFIG[i];
-    this.baseRadius = baseSize * BASE_RADIUS_MULTIPLIER * size;
+    const { pos, size, color } = QUADRANT_CONFIG[i];
+    this.baseRadius = baseSize * CANVAS.BASE_RADIUS * size;
     this.color = color;
-    this.points = new Float32Array(POINT_ARRAY_SIZE);
+    this.points = new Float32Array(CANVAS.POINTS * 2);
     this.quadrantIndex = i;
-    this.initializeRandomProperties();
-  }
-
-  initializeRandomProperties() {
-    this.rotation = Math.random() * TWO_PI;
-    this.rotationSpeed = BLOB_SETTINGS.ROTATION.SPEED_RANGE * (Math.random() - 0.5);
-    this.time = Math.random() * TWO_PI;
-    this.phaseOffset = Math.random() * TWO_PI;
+    
+    this.rotation = Math.random() * CANVAS.TWO_PI;
+    this.rotationSpeed = BLOB_SETTINGS.spin.random * (Math.random() - 0.5);
+    this.time = Math.random() * CANVAS.TWO_PI;
+    this.phaseOffset = Math.random() * CANVAS.TWO_PI;
     this.freqOffset = 0.5 + Math.random();
-    this.sizeOffset = Math.random() * TWO_PI;
-    this.sizeVariation = BLOB_SETTINGS.SIZE.MIN_VARIATION + Math.random() * BLOB_SETTINGS.SIZE.VARIATION_RANGE;
-    this.moveSpeed = BLOB_SETTINGS.MOVEMENT.MIN_SPEED + Math.random() * BLOB_SETTINGS.MOVEMENT.SPEED_RANGE;
-    this.pointOffsets = Array.from({ length: POINTS_COUNT }, () => Math.random() * TWO_PI);
-    this.distortionScale = BLOB_SETTINGS.DISTORTION.MIN + Math.random() * BLOB_SETTINGS.DISTORTION.RANGE;
-    this.centerAttraction = BLOB_SETTINGS.MOVEMENT.CENTER_ATTRACTION;
+    this.sizeOffset = Math.random() * CANVAS.TWO_PI;
+    this.sizeVariation = BLOB_SETTINGS.pulse.base + Math.random() * BLOB_SETTINGS.pulse.range;
+    this.moveSpeed = BLOB_SETTINGS.drift.speed;
+    this.pointOffsets = Array.from({ length: CANVAS.POINTS }, () => Math.random() * CANVAS.TWO_PI);
+    this.distortionScale = BLOB_SETTINGS.morph.amount + Math.random() * BLOB_SETTINGS.morph.variety;
   }
 
   initializePosition() {
@@ -112,13 +113,22 @@ class Blob {
     let newX = x;
     let newY = y;
 
+    // Skip collision check if this blob is not visible
+    if (!isPointVisible(x, y, this.radius + CANVAS.MIN_COLLISION_DIST)) {
+      return { x, y };
+    }
     otherBlobs.forEach((otherBlob) => {
       if (otherBlob === this) return;
+
+      // Skip collision check if the other blob is not visible
+      if (!isPointVisible(otherBlob.x, otherBlob.y, otherBlob.radius + CANVAS.MIN_COLLISION_DIST)) {
+        return;
+      }
 
       const dx = newX - otherBlob.x;
       const dy = newY - otherBlob.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      const minDistance = this.radius + otherBlob.radius + MIN_COLLISION_DISTANCE;
+      const minDistance = this.radius + otherBlob.radius + CANVAS.MIN_COLLISION_DIST;
 
       if (distance < minDistance) {
         const angle = Math.atan2(dy, dx);
@@ -167,45 +177,47 @@ class Blob {
     };
   }
 
+  // Simplified update method
   update() {
-    this.time += BLOB_SETTINGS.ROTATION.BASE_SPEED;
+    this.time += BLOB_SETTINGS.spin.base;
     this.rotation += this.rotationSpeed;
     this.radius = this.baseRadius * (1 + Math.sin(this.time * 0.4 + this.sizeOffset) * this.sizeVariation);
 
-    const moveRange = this.baseRadius * this.moveSpeed;
     const center = this.getQuadrantCenter();
-
+    const moveRange = this.baseRadius * this.moveSpeed;
+    
+    let targetX = this.x + Math.sin(this.time * 0.2 * this.freqOffset + this.phaseOffset) * moveRange;
+    let targetY = this.y + Math.cos(this.time * 0.3 * this.freqOffset + this.phaseOffset) * moveRange;
+    
     const dx = center.x - this.x;
     const dy = center.y - this.y;
     const distToCenter = Math.sqrt(dx * dx + dy * dy);
-
-    let targetX = this.x + Math.sin(this.time * 0.2 * this.freqOffset + this.phaseOffset) * moveRange;
-    let targetY = this.y + Math.cos(this.time * 0.3 * this.freqOffset + this.phaseOffset) * moveRange;
-
-    const maxDistance = this.baseRadius * BLOB_SETTINGS.MOVEMENT.MAX_DISTANCE_MULTIPLIER;
-    if (distToCenter > maxDistance) {
-      const attraction = (distToCenter - maxDistance) * this.centerAttraction;
-      targetX += (dx / distToCenter) * attraction;
-      targetY += (dy / distToCenter) * attraction;
+    const maxDistance = this.baseRadius * BLOB_SETTINGS.drift.limit;
+    
+    if (distToCenter > maxDistance * 0.5) {
+        const pullStrength = Math.min(1, (distToCenter - maxDistance * 0.5) / maxDistance);
+        const attraction = distToCenter * BLOB_SETTINGS.drift.pull * pullStrength;
+        targetX += (dx / distToCenter) * attraction;
+        targetY += (dy / distToCenter) * attraction;
     }
-
-    const result = this.handleCollisions(targetX, targetY, blobs, 5);
-    this.x += (result.x - this.x) * BLOB_SETTINGS.MOVEMENT.SMOOTHING;
-    this.y += (result.y - this.y) * BLOB_SETTINGS.MOVEMENT.SMOOTHING;
+    
+    const { x, y } = this.handleCollisions(targetX, targetY, blobs, 3);
+    this.x += (x - this.x) * BLOB_SETTINGS.drift.ease;
+    this.y += (y - this.y) * BLOB_SETTINGS.drift.ease;
 
     this.updatePoints();
   }
 
   updatePoints() {
-    const angleStep = TWO_PI / POINTS_COUNT;
-    for (let i = 0; i < POINTS_COUNT; i++) {
+    const angleStep = CANVAS.TWO_PI / CANVAS.POINTS;
+    for (let i = 0; i < CANVAS.POINTS; i++) {
       const angle = i * angleStep + this.rotation;
-      const timeBase = this.time * BLOB_SETTINGS.DISTORTION.TIME_SCALE;
+      const timeBase = this.time * BLOB_SETTINGS.morph.speed;
       const distortion =
         Math.sin(timeBase + this.pointOffsets[i]) * this.distortionScale +
-        Math.sin(timeBase * BLOB_SETTINGS.DISTORTION.TIME_MULTIPLIER + this.pointOffsets[(i + 3) % POINTS_COUNT]) *
-          (this.distortionScale * BLOB_SETTINGS.DISTORTION.SECONDARY_SCALE);
-      const dist = this.radius * (BLOB_SETTINGS.SIZE.SCALE + distortion);
+        Math.sin(timeBase * BLOB_SETTINGS.morph.wave.frequency + this.pointOffsets[(i + 3) % CANVAS.POINTS]) *
+          (this.distortionScale * BLOB_SETTINGS.morph.wave.secondary);
+      const dist = this.radius * (BLOB_SETTINGS.pulse.scale + distortion);
 
       this.points[i * 2] = this.x + Math.cos(angle) * dist;
       this.points[i * 2 + 1] = this.y + Math.sin(angle) * dist;
@@ -216,12 +228,12 @@ class Blob {
     ctx.beginPath();
     ctx.moveTo(this.points[0], this.points[1]);
 
-    for (let i = 0; i < POINT_ARRAY_SIZE; i += 2) {
-      const nextI = (i + 2) % POINT_ARRAY_SIZE;
-      const nextNextI = (i + 4) % POINT_ARRAY_SIZE;
-      const prevI = (i - 2 + POINT_ARRAY_SIZE) % POINT_ARRAY_SIZE;
+    for (let i = 0; i < CANVAS.POINTS * 2; i += 2) {
+      const nextI = (i + 2) % (CANVAS.POINTS * 2);
+      const nextNextI = (i + 4) % (CANVAS.POINTS * 2);
+      const prevI = (i - 2 + (CANVAS.POINTS * 2)) % (CANVAS.POINTS * 2);
 
-      const controlInfluence = BLOB_SETTINGS.CURVE.BASE_INFLUENCE * (this.radius / this.baseRadius);
+      const controlInfluence = BLOB_SETTINGS.smooth * (this.radius / this.baseRadius);
 
       const cx1 = this.points[i] + (this.points[nextI] - this.points[prevI]) * controlInfluence;
       const cy1 = this.points[i + 1] + (this.points[nextI + 1] - this.points[prevI + 1]) * controlInfluence;
@@ -237,7 +249,7 @@ class Blob {
 }
 
 // Animation Setup
-const blobs = Array.from({ length: BLOB_COUNT }, (_, i) => new Blob(i));
+const blobs = Array.from({ length: CANVAS.BLOB_COUNT }, (_, i) => new Blob(i));
 blobs.forEach((blob, i) => blob.reset(i, blobs));
 
 function animate() {
@@ -250,14 +262,15 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
-// Event Listeners
+// Event Handlers
 window.addEventListener("resize", () => {
   baseSize = updateCanvasSize();
   blobs.forEach((blob, i) => {
-    blob.baseRadius = baseSize * BASE_RADIUS_MULTIPLIER * QUADRANT_CONFIG[i].size;
+    blob.baseRadius = baseSize * CANVAS.BASE_RADIUS * QUADRANT_CONFIG[i].size;
     blob.reset(i, blobs);
   });
 });
 
 // Start Animation
 animate();
+
