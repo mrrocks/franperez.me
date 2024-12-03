@@ -6,126 +6,15 @@ BODY {
   line-height: 1;
 }
 
-.blobs {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-}
-.blobs DIV {
-  position: absolute;
-  width: 50%;
-  height: 50%;
-}
-.blobs DIV:before {
-  position: absolute;
-  opacity: 0.12;
-  content: "";
-  display: block;
-  will-change: transform;
-}
-
-@keyframes rotation-up {
-  0% {
-    transform: scale(1) rotate(0deg);
-  }
-  25% {
-    transform: scale(1.1) rotate(90deg);
-  }
-  50% {
-    transform: scale(1) rotate(180deg);
-  }
-  75% {
-    transform: scale(1.1) rotate(270deg);
-  }
-  100% {
-    transform: scale(1) rotate(360deg);
-  }
-}
-
-@keyframes rotation-down {
-  0% {
-    transform: scale(1) rotate(0deg);
-  }
-  25% {
-    transform: scale(0.9) rotate(90deg);
-  }
-  50% {
-    transform: scale(1) rotate(180deg);
-  }
-  75% {
-    transform: scale(0.9) rotate(270deg);
-  }
-  100% {
-    transform: scale(1) rotate(360deg);
-  }
-}
-.top-left {
-  top: 0px;
-  left: 0px;
-}
-.top-left:before {
-  background: url(../assets/top-left.svg) no-repeat;
-  background-size: 100%;
-  width: 1200px;
-  height: 1200px;
-  animation: rotation-down var(--duration) linear infinite;
-  animation-delay: 250ms;
-  animation-direction: reverse;
-  will-change: transform;
-}
-
-.top-right {
-  top: 0px;
-  right: 0px;
-}
-.top-right:before {
-  background: url(../assets/top-right.svg) no-repeat;
-  background-size: 100%;
-  width: 900px;
-  height: 900px;
-  animation: rotation-up var(--duration) linear infinite;
-  animation-delay: 500ms;
-  will-change: transform;
-}
-
-.bottom-left {
-  bottom: 0px;
-  left: 0px;
-}
-.bottom-left:before {
-  background: url(../assets/bottom-left.svg) no-repeat;
-  background-size: 100%;
-  width: 900px;
-  height: 900px;
-  animation: rotation-up var(--duration) linear infinite;
-  animation-direction: reverse;
-  will-change: transform;
-}
-
-.bottom-right {
-  bottom: 0px;
-  right: 0px;
-}
-.bottom-right:before {
-  background: url(../assets/bottom-right.svg) no-repeat;
-  background-size: 100%;
-  width: 1200px;
-  height: 1200px;
-  animation: rotation-down var(--duration) linear infinite;
-  animation-delay: 750ms;
-  will-change: transform;
-}
-
 SECTION {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translateZ(0);
   width: 1092px;
   height: 620px;
   z-index: 1;
+  will-change: transform;
 }
 
 .illustration {
@@ -144,6 +33,8 @@ SECTION {
   background: url(../assets/illus.svg) no-repeat;
   filter: blur(24px);
   opacity: 0.4;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .base {
@@ -162,7 +53,12 @@ SECTION {
   background: url(../assets/waves.svg) repeat;
   width: 240px;
   height: 240px;
+<<<<<<< HEAD
   animation: pattern linear 18s infinite;
+=======
+  animation: pattern linear 20s infinite;
+  will-change: background-position;
+>>>>>>> main
 }
 
 @keyframes pattern {
@@ -203,17 +99,6 @@ h1 {
   color: #6439ed;
   margin-bottom: 47px;
   position: relative;
-}
-
-h1:after {
-  content: "";
-  display: block;
-  background: url(../assets/mini-blobs.svg) no-repeat;
-  width: 38px;
-  height: 52px;
-  position: absolute;
-  left: 326px;
-  top: -19px;
 }
 
 p {
@@ -263,24 +148,11 @@ IMG {
   background-position-x: -516px;
 }
 
-@media (min-width: 0px) {
-  .top-left:before {
-    bottom: -100px;
-    right: 50px;
-  }
-
-  .top-right:before {
-    bottom: 40px;
-    left: 90px;
-  }
-
-  .bottom-left:before {
-    top: 180px;
-    right: 80px;
-  }
-
-  .bottom-right:before {
-    top: 20px;
-    left: -40px;
-  }
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
 }
