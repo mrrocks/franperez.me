@@ -53,12 +53,8 @@ SECTION {
   background: url(../assets/waves.svg) repeat;
   width: 240px;
   height: 240px;
-<<<<<<< HEAD
-  animation: pattern linear 18s infinite;
-=======
   animation: pattern linear 20s infinite;
   will-change: background-position;
->>>>>>> main
 }
 
 @keyframes pattern {
