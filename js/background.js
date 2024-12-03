@@ -1,59 +1,110 @@
+// Canvas Setup
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d", { alpha: false });
-
 const DPR = window.devicePixelRatio || 1;
-
 ctx.imageSmoothingEnabled = false;
 
+// Constants
+const TWO_PI = Math.PI * 2;
+const CANVAS_SCALE = 1.65;
+const POINTS_COUNT = 12;
+const POINT_ARRAY_SIZE = POINTS_COUNT * 2;
+const MIN_COLLISION_DISTANCE = 24;
+const BLOB_COUNT = 4;
+const BASE_RADIUS_MULTIPLIER = 0.4;
+
+// Configuration
+const QUADRANT_CONFIG = [
+  { pos: [0, 0], size: 1.1, color: "#F7C59520" },
+  { pos: [1, 0], size: 0.9, color: "#F97F9C20" },
+  { pos: [0, 1], size: 0.9, color: "#ACFED430" },
+  { pos: [1, 1], size: 1.1, color: "#8083CF20" },
+];
+
+const BLOB_SETTINGS = {
+  ROTATION: {
+    SPEED_RANGE: 0.002,
+    BASE_SPEED: 0.003,
+  },
+  SIZE: {
+    MIN_VARIATION: 0.02,
+    VARIATION_RANGE: 0.03,
+    SCALE: 0.97,
+  },
+  MOVEMENT: {
+    MIN_SPEED: 0.001,
+    SPEED_RANGE: 0.001,
+    CENTER_ATTRACTION: 0.03,
+    MAX_DISTANCE_MULTIPLIER: 1.2,
+    SMOOTHING: 0.05,
+  },
+  DISTORTION: {
+    MIN: 0.02,
+    RANGE: 0.015,
+    TIME_SCALE: 0.8,
+    SECONDARY_SCALE: 0.7,
+    TIME_MULTIPLIER: 1.5,
+  },
+  CURVE: {
+    BASE_INFLUENCE: 0.18,
+  },
+};
+
+// Canvas Utilities
 function updateCanvasSize() {
   canvas.width = window.innerWidth * DPR;
   canvas.height = window.innerHeight * DPR;
-
   canvas.style.width = `${window.innerWidth}px`;
   canvas.style.height = `${window.innerHeight}px`;
-
   ctx.scale(DPR, DPR);
-
-  return Math.min(window.innerWidth, window.innerHeight) * 1.65;
+  return Math.min(window.innerWidth, window.innerHeight) * CANVAS_SCALE;
 }
 
 let baseSize = updateCanvasSize();
 
-const colors = ["#F7C59520", "#F97F9C20", "#ACFED430", "#8083CF20"];
-
-const quadrants = [
-  [0, 0, 1.1], // top-left
-  [1, 0, 0.9], // top-right
-  [0, 1, 0.9], // bottom-left
-  [1, 1, 1.1], // bottom-right
-];
-
+// Blob Class
 class Blob {
   constructor(i) {
-    const [x, y, size] = quadrants[i];
-    this.baseRadius = baseSize * 0.4 * size;
-    this.color = colors[i];
-    this.points = new Float32Array(24);
-    this.rotation = Math.random() * Math.PI * 2;
-    this.rotationSpeed = 0.002 * (Math.random() - 0.5);
-    this.time = Math.random() * Math.PI * 2;
-    this.phaseOffset = Math.random() * Math.PI * 2;
-    this.freqOffset = 0.5 + Math.random() * 1;
-    this.sizeOffset = Math.random() * Math.PI * 2;
-    this.sizeVariation = 0.02 + Math.random() * 0.03;
-    this.moveSpeed = 0.001 + Math.random() * 0.001;
-    this.pointOffsets = Array.from({ length: 12 }, () => Math.random() * Math.PI * 2);
-    this.distortionScale = 0.02 + Math.random() * 0.015;
-    this.quadrantIndex = i;
-    this.centerAttraction = 0.03;
+    this.initializeProperties(i);
+    this.initializePosition();
+  }
 
-    // Initialize position without collision check
-    const [xRatio, yRatio] = quadrants[i];
+  initializeProperties(i) {
+    const {
+      pos: [x, y],
+      size,
+      color,
+    } = QUADRANT_CONFIG[i];
+    this.baseRadius = baseSize * BASE_RADIUS_MULTIPLIER * size;
+    this.color = color;
+    this.points = new Float32Array(POINT_ARRAY_SIZE);
+    this.quadrantIndex = i;
+    this.initializeRandomProperties();
+  }
+
+  initializeRandomProperties() {
+    this.rotation = Math.random() * TWO_PI;
+    this.rotationSpeed = BLOB_SETTINGS.ROTATION.SPEED_RANGE * (Math.random() - 0.5);
+    this.time = Math.random() * TWO_PI;
+    this.phaseOffset = Math.random() * TWO_PI;
+    this.freqOffset = 0.5 + Math.random();
+    this.sizeOffset = Math.random() * TWO_PI;
+    this.sizeVariation = BLOB_SETTINGS.SIZE.MIN_VARIATION + Math.random() * BLOB_SETTINGS.SIZE.VARIATION_RANGE;
+    this.moveSpeed = BLOB_SETTINGS.MOVEMENT.MIN_SPEED + Math.random() * BLOB_SETTINGS.MOVEMENT.SPEED_RANGE;
+    this.pointOffsets = Array.from({ length: POINTS_COUNT }, () => Math.random() * TWO_PI);
+    this.distortionScale = BLOB_SETTINGS.DISTORTION.MIN + Math.random() * BLOB_SETTINGS.DISTORTION.RANGE;
+    this.centerAttraction = BLOB_SETTINGS.MOVEMENT.CENTER_ATTRACTION;
+  }
+
+  initializePosition() {
+    const {
+      pos: [x, y],
+    } = QUADRANT_CONFIG[this.quadrantIndex];
     const dpr = window.devicePixelRatio || 1;
     this.canvasWidth = canvas.width / dpr;
     this.canvasHeight = canvas.height / dpr;
-    this.x = xRatio * this.canvasWidth;
-    this.y = yRatio * this.canvasHeight;
+    this.x = x * this.canvasWidth;
+    this.y = y * this.canvasHeight;
     this.radius = this.baseRadius;
   }
 
@@ -67,7 +118,7 @@ class Blob {
       const dx = newX - otherBlob.x;
       const dy = newY - otherBlob.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      const minDistance = this.radius + otherBlob.radius + 24;
+      const minDistance = this.radius + otherBlob.radius + MIN_COLLISION_DISTANCE;
 
       if (distance < minDistance) {
         const angle = Math.atan2(dy, dx);
@@ -81,7 +132,9 @@ class Blob {
   }
 
   reset(i, otherBlobs) {
-    const [xRatio, yRatio] = quadrants[i];
+    const {
+      pos: [xRatio, yRatio],
+    } = QUADRANT_CONFIG[i];
     const dpr = window.devicePixelRatio || 1;
     let newX = (xRatio * canvas.width) / dpr;
     let newY = (yRatio * canvas.height) / dpr;
@@ -104,7 +157,9 @@ class Blob {
   }
 
   getQuadrantCenter() {
-    const [x, y] = quadrants[this.quadrantIndex];
+    const {
+      pos: [x, y],
+    } = QUADRANT_CONFIG[this.quadrantIndex];
     const dpr = window.devicePixelRatio || 1;
     return {
       x: (x * canvas.width) / dpr,
@@ -113,24 +168,21 @@ class Blob {
   }
 
   update() {
-    this.time += 0.003;
+    this.time += BLOB_SETTINGS.ROTATION.BASE_SPEED;
     this.rotation += this.rotationSpeed;
     this.radius = this.baseRadius * (1 + Math.sin(this.time * 0.4 + this.sizeOffset) * this.sizeVariation);
 
     const moveRange = this.baseRadius * this.moveSpeed;
     const center = this.getQuadrantCenter();
 
-    // Calculate distance from quadrant center
     const dx = center.x - this.x;
     const dy = center.y - this.y;
     const distToCenter = Math.sqrt(dx * dx + dy * dy);
 
-    // Add center attraction to movement
     let targetX = this.x + Math.sin(this.time * 0.2 * this.freqOffset + this.phaseOffset) * moveRange;
     let targetY = this.y + Math.cos(this.time * 0.3 * this.freqOffset + this.phaseOffset) * moveRange;
 
-    // Apply attraction to center when too far
-    const maxDistance = this.baseRadius * 1.2;
+    const maxDistance = this.baseRadius * BLOB_SETTINGS.MOVEMENT.MAX_DISTANCE_MULTIPLIER;
     if (distToCenter > maxDistance) {
       const attraction = (distToCenter - maxDistance) * this.centerAttraction;
       targetX += (dx / distToCenter) * attraction;
@@ -138,21 +190,22 @@ class Blob {
     }
 
     const result = this.handleCollisions(targetX, targetY, blobs, 5);
-    this.x += (result.x - this.x) * 0.05;
-    this.y += (result.y - this.y) * 0.05;
+    this.x += (result.x - this.x) * BLOB_SETTINGS.MOVEMENT.SMOOTHING;
+    this.y += (result.y - this.y) * BLOB_SETTINGS.MOVEMENT.SMOOTHING;
 
     this.updatePoints();
   }
 
   updatePoints() {
-    const angleStep = (Math.PI * 2) / 12;
-    for (let i = 0; i < 12; i++) {
+    const angleStep = TWO_PI / POINTS_COUNT;
+    for (let i = 0; i < POINTS_COUNT; i++) {
       const angle = i * angleStep + this.rotation;
-      const timeBase = this.time * 0.8;
+      const timeBase = this.time * BLOB_SETTINGS.DISTORTION.TIME_SCALE;
       const distortion =
         Math.sin(timeBase + this.pointOffsets[i]) * this.distortionScale +
-        Math.sin(timeBase * 1.5 + this.pointOffsets[(i + 3) % 12]) * (this.distortionScale * 0.7);
-      const dist = this.radius * (0.97 + distortion);
+        Math.sin(timeBase * BLOB_SETTINGS.DISTORTION.TIME_MULTIPLIER + this.pointOffsets[(i + 3) % POINTS_COUNT]) *
+          (this.distortionScale * BLOB_SETTINGS.DISTORTION.SECONDARY_SCALE);
+      const dist = this.radius * (BLOB_SETTINGS.SIZE.SCALE + distortion);
 
       this.points[i * 2] = this.x + Math.cos(angle) * dist;
       this.points[i * 2 + 1] = this.y + Math.sin(angle) * dist;
@@ -163,14 +216,12 @@ class Blob {
     ctx.beginPath();
     ctx.moveTo(this.points[0], this.points[1]);
 
-    for (let i = 0; i < 24; i += 2) {
-      const nextI = (i + 2) % 24;
-      const nextNextI = (i + 4) % 24;
-      const prevI = (i - 2 + 24) % 24;
+    for (let i = 0; i < POINT_ARRAY_SIZE; i += 2) {
+      const nextI = (i + 2) % POINT_ARRAY_SIZE;
+      const nextNextI = (i + 4) % POINT_ARRAY_SIZE;
+      const prevI = (i - 2 + POINT_ARRAY_SIZE) % POINT_ARRAY_SIZE;
 
-      // Reduce base influence for softer curves
-      const baseInfluence = 0.18;
-      const controlInfluence = baseInfluence * (this.radius / this.baseRadius);
+      const controlInfluence = BLOB_SETTINGS.CURVE.BASE_INFLUENCE * (this.radius / this.baseRadius);
 
       const cx1 = this.points[i] + (this.points[nextI] - this.points[prevI]) * controlInfluence;
       const cy1 = this.points[i + 1] + (this.points[nextI + 1] - this.points[prevI + 1]) * controlInfluence;
@@ -185,29 +236,28 @@ class Blob {
   }
 }
 
-const blobs = Array.from({ length: 4 }, (_, i) => new Blob(i));
-
-// After initialization, run reset on all blobs to handle collisions
+// Animation Setup
+const blobs = Array.from({ length: BLOB_COUNT }, (_, i) => new Blob(i));
 blobs.forEach((blob, i) => blob.reset(i, blobs));
 
 function animate() {
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   blobs.forEach((blob) => {
     blob.update();
     blob.draw();
   });
-
   requestAnimationFrame(animate);
 }
 
-animate();
-
+// Event Listeners
 window.addEventListener("resize", () => {
   baseSize = updateCanvasSize();
   blobs.forEach((blob, i) => {
-    blob.baseRadius = baseSize * 0.4 * quadrants[i][2];
+    blob.baseRadius = baseSize * BASE_RADIUS_MULTIPLIER * QUADRANT_CONFIG[i].size;
     blob.reset(i, blobs);
   });
 });
+
+// Start Animation
+animate();
