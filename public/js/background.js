@@ -9,16 +9,16 @@ const CANVAS = {
   TWO_PI: Math.PI * 2,
   SCALE: 1.65,
   POINTS: 14,
-  MIN_COLLISION_DIST: 28,
+  MIN_COLLISION_DIST: 32,
   BLOB_COUNT: 4,
   BASE_RADIUS: 0.4,
 };
 
 const QUADRANT_CONFIG = [
-  { pos: [0, 0], size: 1, color: "#F7C595", alpha: "18" },
-  { pos: [1, 0], size: 1, color: "#F97F9C", alpha: "18" },
-  { pos: [0, 1], size: 1, color: "#ACFED4", alpha: "24" },
-  { pos: [1, 1], size: 1, color: "#8083CF", alpha: "18" },
+  { pos: [0, 0], size: 1, color: "oklch(0.98 0.04 66)" },
+  { pos: [1, 0], size: 1, color: "oklch(0.98 0.04 2)" },
+  { pos: [0, 1], size: 1, color: "oklch(0.98 0.04 285)" },
+  { pos: [1, 1], size: 1, color: "oklch(0.98 0.04 163)" },
 ];
 
 const BLOB_SETTINGS = {
@@ -55,10 +55,6 @@ const BLOB_SETTINGS = {
 
 // Canvas Utilities
 
-function isPointVisible(x, y, radius) {
-  return x + radius >= 0 && x - radius <= window.innerWidth && y + radius >= 0 && y - radius <= window.innerHeight;
-}
-
 function updateCanvasSize() {
   canvas.width = window.innerWidth * DPR;
   canvas.height = window.innerHeight * DPR;
@@ -78,7 +74,7 @@ class Blob {
   }
 
   initializeProperties(i) {
-    const { pos, size, color, alpha } = QUADRANT_CONFIG[i];
+    const { pos, size, color } = QUADRANT_CONFIG[i];
     this.baseRadius = baseSize * CANVAS.BASE_RADIUS * size;
     this.color = color;
     this.points = new Float32Array(CANVAS.POINTS * 2);
@@ -110,55 +106,28 @@ class Blob {
     this.radius = this.baseRadius;
   }
 
-  handleCollisions(x, y, otherBlobs, pushStrength = 1) {
-    let newX = x;
-    let newY = y;
-
-    // Skip collision check if this blob is not visible
-    if (!isPointVisible(x, y, this.radius + CANVAS.MIN_COLLISION_DIST)) {
-      return { x, y };
-    }
-    otherBlobs.forEach((otherBlob) => {
-      if (otherBlob === this) return;
-
-      // Skip collision check if the other blob is not visible
-      if (!isPointVisible(otherBlob.x, otherBlob.y, otherBlob.radius + CANVAS.MIN_COLLISION_DIST)) {
-        return;
-      }
-
-      const dx = newX - otherBlob.x;
-      const dy = newY - otherBlob.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const minDistance = this.radius + otherBlob.radius + CANVAS.MIN_COLLISION_DIST;
-
-      if (distance < minDistance) {
-        const angle = Math.atan2(dy, dx);
-        const pushDistance = (minDistance - distance) * pushStrength;
-        newX += Math.cos(angle) * pushDistance;
-        newY += Math.sin(angle) * pushDistance;
-      }
-    });
-
-    return { x: newX, y: newY };
-  }
-
   reset(i, otherBlobs) {
-    const {
-      pos: [xRatio, yRatio],
-    } = QUADRANT_CONFIG[i];
+    const [xRatio, yRatio] = QUADRANT_CONFIG[i].pos;
     const dpr = window.devicePixelRatio || 1;
     let newX = (xRatio * canvas.width) / dpr;
     let newY = (yRatio * canvas.height) / dpr;
     this.radius = this.baseRadius;
 
-    let attempts = 0;
-    while (attempts < 50) {
-      const result = this.handleCollisions(newX, newY, otherBlobs.slice(0, i), 1);
-      if (result.x === newX && result.y === newY) break;
-      newX = result.x;
-      newY = result.y;
-      attempts++;
-    }
+    otherBlobs.slice(0, i).forEach((otherBlob) => {
+      const dx = newX - otherBlob.x;
+      const dy = newY - otherBlob.y;
+      const distance = Math.hypot(dx, dy);
+      const minDistance = this.radius + otherBlob.radius + CANVAS.MIN_COLLISION_DIST;
+
+      if (distance < minDistance) {
+        const angle = Math.atan2(dy, dx);
+        const overlapAmount = (minDistance - distance) / 2;
+        newX += Math.cos(angle) * overlapAmount;
+        newY += Math.sin(angle) * overlapAmount;
+        otherBlob.x -= Math.cos(angle) * overlapAmount;
+        otherBlob.y -= Math.sin(angle) * overlapAmount;
+      }
+    });
 
     const maxX = canvas.width / DPR + this.baseRadius;
     const maxY = canvas.height / DPR + this.baseRadius;
@@ -202,13 +171,47 @@ class Blob {
       targetY += (dy / distToCenter) * attraction;
     }
 
-    const { x, y } = this.handleCollisions(targetX, targetY, blobs, 3);
-    this.x += (x - this.x) * BLOB_SETTINGS.drift.ease;
-    this.y += (y - this.y) * BLOB_SETTINGS.drift.ease;
+    // Update position with easing
+    this.x += (targetX - this.x) * BLOB_SETTINGS.drift.ease;
+    this.y += (targetY - this.y) * BLOB_SETTINGS.drift.ease;
+
+    // More frequent but gentler collision checks
+    for (let i = 0; i < 3; i++) {
+      this.resolveCollisions(blobs);
+    }
 
     this.updatePoints();
     this.colorTime += BLOB_SETTINGS.colorTransition.speed;
     this.updateColor();
+  }
+
+  resolveCollisions(otherBlobs) {
+    let hasOverlap = false;
+
+    otherBlobs.forEach((otherBlob) => {
+      if (otherBlob === this) return;
+
+      const dx = this.x - otherBlob.x;
+      const dy = this.y - otherBlob.y;
+      const distance = Math.hypot(dx, dy);
+      const minDistance = this.radius + otherBlob.radius + CANVAS.MIN_COLLISION_DIST;
+
+      if (distance < minDistance) {
+        hasOverlap = true;
+        const angle = Math.atan2(dy, dx);
+        const correction = minDistance - distance;
+
+        // Move both blobs equally to maintain exact minimum distance
+        const moveX = Math.cos(angle) * correction;
+        const moveY = Math.sin(angle) * correction;
+
+        this.x += moveX * 0.5;
+        this.y += moveY * 0.5;
+        otherBlob.x -= moveX * 0.5;
+        otherBlob.y -= moveY * 0.5;
+      }
+    });
+    return hasOverlap;
   }
 
   updatePoints() {
@@ -252,114 +255,62 @@ class Blob {
 
   updateColor() {
     const totalColors = QUADRANT_CONFIG.length;
-    const position = this.colorTime % (Math.PI * 2);
-    const currentIndex = Math.floor((position / (Math.PI * 2)) * totalColors);
+    const cycleDuration = Math.PI * 2;
+    const position = this.colorTime % cycleDuration;
+    const progressTotal = (position / cycleDuration) * totalColors;
+    const currentIndex = Math.floor(progressTotal);
     const nextIndex = (currentIndex + 1) % totalColors;
+    const progress = progressTotal % 1;
 
-    // Using sine for smoother transitions
-    const progress = (1 - Math.cos((((position / (Math.PI * 2)) * totalColors) % 1) * Math.PI)) / 2;
+    const currentColor = this.parseOklch(QUADRANT_CONFIG[currentIndex].color);
+    const nextColor = this.parseOklch(QUADRANT_CONFIG[nextIndex].color);
 
-    const currentColor = this.hexToRgb(QUADRANT_CONFIG[currentIndex].color);
-    const nextColor = this.hexToRgb(QUADRANT_CONFIG[nextIndex].color);
-    const currentAlpha = parseInt(QUADRANT_CONFIG[currentIndex].alpha, 16) / 255;
-    const nextAlpha = parseInt(QUADRANT_CONFIG[nextIndex].alpha, 16) / 255;
+    const l = this.lerp(currentColor.l, nextColor.l, progress);
+    const c = this.lerp(currentColor.c, nextColor.c, progress);
+    const h = this.lerpHue(currentColor.h, nextColor.h, progress);
 
-    // Using HSL internally for better color blending
-    const currentHSL = this.rgbToHsl(currentColor.r, currentColor.g, currentColor.b);
-    const nextHSL = this.rgbToHsl(nextColor.r, nextColor.g, nextColor.b);
-
-    // Ensure we take the shortest path around the color wheel
-    let hueDiff = nextHSL.h - currentHSL.h;
-    if (Math.abs(hueDiff) > 0.5) {
-      hueDiff = hueDiff > 0 ? hueDiff - 1 : hueDiff + 1;
-    }
-
-    const hue = currentHSL.h + hueDiff * progress;
-    const saturation = this.lerp(currentHSL.s, nextHSL.s, progress);
-    const lightness = this.lerp(currentHSL.l, nextHSL.l, progress);
-    const alpha = this.lerp(currentAlpha, nextAlpha, progress);
-
-    const rgb = this.hslToRgb(hue < 0 ? hue + 1 : hue % 1, saturation, lightness);
-    this.color = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+    this.color = `oklch(${l} ${c} ${h})`;
   }
 
-  hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  parseOklch(color) {
+    const match = color.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/);
     return {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16),
+      l: parseFloat(match[1]),
+      c: parseFloat(match[2]),
+      h: parseFloat(match[3]),
     };
+  }
+
+  lerpHue(h1, h2, t) {
+    let diff = h2 - h1;
+    if (Math.abs(diff) > 180) {
+      if (diff > 0) {
+        h1 += 360;
+      } else {
+        h2 += 360;
+      }
+    }
+    return (h1 + (h2 - h1) * t) % 360;
   }
 
   lerp(start, end, t) {
     return start * (1 - t) + end * t;
   }
-
-  rgbToHsl(r, g, b) {
-    r /= 255;
-    g /= 255;
-    b /= 255;
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h,
-      s,
-      l = (max + min) / 2;
-
-    if (max === min) {
-      h = s = 0;
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r:
-          h = (g - b) / d + (g < b ? 6 : 0);
-          break;
-        case g:
-          h = (b - r) / d + 2;
-          break;
-        case b:
-          h = (r - g) / d + 4;
-          break;
-      }
-      h /= 6;
-    }
-    return { h, s, l };
-  }
-
-  hslToRgb(h, s, l) {
-    let r, g, b;
-
-    if (s === 0) {
-      r = g = b = l;
-    } else {
-      const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
-      };
-
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1 / 3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1 / 3);
-    }
-
-    return {
-      r: Math.round(r * 255),
-      g: Math.round(g * 255),
-      b: Math.round(b * 255),
-    };
-  }
 }
 
 // Animation Setup
 const blobs = Array.from({ length: CANVAS.BLOB_COUNT }, (_, i) => new Blob(i));
-blobs.forEach((blob, i) => blob.reset(i, blobs));
+
+// Initialize blobs with proper spacing
+function initializeBlobs() {
+  blobs.forEach((blob, i) => {
+    blob.reset(i, blobs);
+    // Ensure initial positions respect minimum distance
+    for (let j = 0; j < 10; j++) {
+      blob.resolveCollisions(blobs);
+    }
+  });
+}
 
 function animate() {
   ctx.fillStyle = "#fff";
@@ -371,14 +322,19 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
+// Start Animation
+initializeBlobs();
+animate();
+
 // Event Handlers
 window.addEventListener("resize", () => {
   baseSize = updateCanvasSize();
   blobs.forEach((blob, i) => {
     blob.baseRadius = baseSize * CANVAS.BASE_RADIUS * QUADRANT_CONFIG[i].size;
     blob.reset(i, blobs);
+    // Ensure proper spacing after resize
+    for (let j = 0; j < 10; j++) {
+      blob.resolveCollisions(blobs);
+    }
   });
 });
-
-// Start Animation
-animate();
