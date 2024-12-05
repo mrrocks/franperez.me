@@ -2,55 +2,60 @@ import anime from "animejs";
 
 const zigzag = document.querySelector(".zigzag path");
 const links = document.querySelectorAll(".links a");
-
 const pathLength = zigzag.getTotalLength();
-zigzag.style.strokeDasharray = pathLength;
-zigzag.style.strokeDashoffset = -pathLength;
 
-const colors = {
+const COLORS = {
   mail: "#CDFEE5",
   twitter: "#DBDDF0",
   linkedin: "#FCE5CF",
 };
 
-let currentPathAnimation = null;
-let currentColorAnimation = null;
-
-const createPathAnimation = (from, to) => {
-  const currentPosition = currentPathAnimation ? parseFloat(zigzag.style.strokeDashoffset) : from;
-
-  if (currentPathAnimation) currentPathAnimation.pause();
-
-  currentPathAnimation = anime({
-    targets: ".zigzag path",
-    strokeDashoffset: [currentPosition, to],
-    easing: "easeInOutQuad",
-    duration: (1200 * Math.abs(to - currentPosition)) / pathLength,
-  });
+const ANIMATION_CONFIG = {
+  easing: "easeInOutQuad",
+  duration: 300,
 };
 
-const createColorAnimation = (color) => {
-  if (currentColorAnimation) currentColorAnimation.pause();
+class PathAnimator {
+  constructor() {
+    this.currentPath = null;
+    this.currentColor = null;
 
-  currentColorAnimation = anime({
-    targets: ".zigzag path",
-    stroke: color,
-    easing: "easeInOutQuad",
-    duration: 300,
-  });
-};
+    zigzag.style.strokeDasharray = pathLength;
+    zigzag.style.strokeDashoffset = -pathLength;
+  }
+
+  animatePath(to) {
+    const from = this.currentPath ? parseFloat(zigzag.style.strokeDashoffset) : -pathLength;
+
+    this.currentPath?.pause();
+    this.currentPath = anime({
+      targets: ".zigzag path",
+      strokeDashoffset: [from, to],
+      ...ANIMATION_CONFIG,
+      duration: (800 * Math.abs(to - from)) / pathLength,
+    });
+  }
+
+  animateColor(color) {
+    this.currentColor?.pause();
+    this.currentColor = anime({
+      targets: ".zigzag path",
+      stroke: color,
+      ...ANIMATION_CONFIG,
+    });
+  }
+}
+
+const animator = new PathAnimator();
 
 links.forEach((link) => {
   link.addEventListener("mouseenter", () => {
-    const currentOffset = parseFloat(zigzag.style.strokeDashoffset);
-    const color = colors[link.id];
-    createPathAnimation(currentOffset, 0);
-    createColorAnimation(color);
+    animator.animatePath(0);
+    animator.animateColor(COLORS[link.id]);
   });
 
   link.addEventListener("mouseleave", () => {
-    const currentOffset = parseFloat(zigzag.style.strokeDashoffset);
-    createPathAnimation(currentOffset, -pathLength);
-    createColorAnimation(colors.mail);
+    animator.animatePath(-pathLength);
+    animator.animateColor(COLORS.mail);
   });
 });
