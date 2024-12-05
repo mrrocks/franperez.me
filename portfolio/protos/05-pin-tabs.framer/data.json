@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Optical Adjustment — Medium",
+    "favicon": "images/medium-favicon.png",
+    "url": "medium.com",
+    "image": "images/medium.png"
+  },
+  {
+    "title": "Framer - Prototyping Tool…",
+    "favicon": "images/framer-favicon.png",
+    "url": "framerjs.com",
+    "image": "images/framer.png"
+  },
+  {
+    "title": "spotify - Google Search",
+    "favicon": "images/google-favicon.png",
+    "url": "google.com",
+    "image": "images/google.png"
+  },
+  {
+    "title": "Pupila Estudio | Bezar",
+    "favicon": "images/bezar-favicon.png",
+    "url": "bezar.com",
+    "image": "images/bezar.png"
+  },
+  {
+    "title": "Apple - iPhone 6",
+    "favicon": "images/apple-favicon.png",
+    "url": "apple.com",
+    "image": "images/apple.png"
+  }
+]
