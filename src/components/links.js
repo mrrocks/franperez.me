@@ -19,6 +19,7 @@ class PathAnimator {
   constructor() {
     this.currentPath = null;
     this.currentColor = null;
+    this.lastColor = COLORS.mail;
 
     zigzag.style.strokeDasharray = pathLength;
     zigzag.style.strokeDashoffset = -pathLength;
@@ -38,6 +39,7 @@ class PathAnimator {
 
   animateColor(color) {
     this.currentColor?.pause();
+    this.lastColor = color;
     this.currentColor = anime({
       targets: ".zigzag path",
       stroke: color,
@@ -56,6 +58,6 @@ links.forEach((link) => {
 
   link.addEventListener("mouseleave", () => {
     animator.animatePath(-pathLength);
-    animator.animateColor(COLORS.mail);
+    animator.animateColor(animator.lastColor);
   });
 });

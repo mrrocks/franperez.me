@@ -136,6 +136,8 @@ img {
 
 .links a,
 .links a:active {
+  display: block;
+  height: 32px;
   color: #6439ed;
 }
 
