@@ -57,18 +57,12 @@
   <canvas></canvas>
 
   <!-- Google tag (gtag.js) -->
-  <script type="module">
-    if (import.meta.env.PROD) {
-      const script = document.createElement('script')
-      script.src = 'https://www.googletagmanager.com/gtag/js?id=G-R351Z1NYCV'
-      script.async = true
-      document.head.appendChild(script)
-
-      window.dataLayer = window.dataLayer || []
-      function gtag() { dataLayer.push(arguments) }
-      gtag('js', new Date())
-      gtag('config', 'G-R351Z1NYCV')
-    }
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-R351Z1NYCV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-R351Z1NYCV');
   </script>
 
   <script type="module" src="/src/main.js"></script>
