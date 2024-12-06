@@ -1,7 +1,3 @@
-:root {
-  --duration: 40s;
-}
-
 body {
   margin: 0;
   line-height: 1.5;
@@ -55,19 +51,29 @@ section {
   position: absolute;
   top: 320px;
   right: 120px;
-  background: url('/assets/waves.svg') repeat;
   width: 240px;
   height: 240px;
-  animation: pattern var(--duration) linear infinite;
-  will-change: background-position;
+  overflow: hidden;
+}
+
+.waves::before {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  width: 300%;
+  height: 300%;
+  background: url('/assets/waves.svg') repeat;
+  animation: pattern 20s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 @keyframes pattern {
   0% {
-    background-position: 0 0;
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    background-position: 240px 240px;
+    transform: translate3d(33.33%, 33.33%, 0);
   }
 }
 
