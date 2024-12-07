@@ -10,7 +10,6 @@ section {
   width: min(1092px, 90vw);
   min-width: 920px;
   height: min(620px, 90vh);
-  z-index: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -158,20 +157,16 @@ img {
   width: 173px;
   height: 174px;
   background: url(/assets/zigzag.svg) no-repeat;
-  z-index: -1;
   mix-blend-mode: overlay;
 }
-
-
 .zigzag {
   position: absolute;
   left: -58px;
   top: 0;
-  z-index: 0;
 }
 
 .zigzag path {
-  stroke: #FFF;
+  opacity: 0.8;
 }
 
 canvas {
@@ -179,7 +174,6 @@ canvas {
   inset: 0;
   width: 100dvw;
   height: 100dvh;
-  z-index: -2;
 }
 
 .info {
@@ -190,6 +184,7 @@ canvas {
   height: 100%;
   padding: 32px 0;
   box-sizing: border-box;
+  position: relative;
 }
 
 
