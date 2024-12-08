@@ -188,7 +188,7 @@ canvas {
 }
 
 
-@media (max-width: 919px) {
+@media (max-width: 767px) {
   section {
     position: relative;
     inset: 0;
@@ -212,7 +212,6 @@ canvas {
     transform: scale(0.6);
     transform-origin: bottom right;
     margin: 0;
-    z-index: -1;
     height: auto;
   }
 
@@ -243,12 +242,14 @@ canvas {
   }
 
   h1, h2 {
-    font-size: clamp(56px, 8vw, 64px);
+    font-size: clamp(42px, 7vw, 56px);
     line-height: 1;
   }
 
   p {
     max-width: 432px;
+    font-size: 16px;
+    line-height: 28px;
   }
 
   .info {
