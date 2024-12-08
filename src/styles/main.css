@@ -65,7 +65,7 @@ section {
   width: 300%;
   height: 300%;
   background: url('/assets/waves.svg') repeat;
-  animation: pattern 20s linear infinite;
+  animation: pattern 12s linear infinite;
   will-change: transform;
   transform: translateZ(0);
 }

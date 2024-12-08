@@ -8,10 +8,10 @@ const ctx = canvas.getContext("2d", { alpha: false });
 
 // Configuration objects
 const BLOB_CONFIG = {
-  speed: 1,
+  speed: 1.08,
   count: 14,
   scale: 1,
-  padding: 56,
+  padding: 60,
   breathingRange: 0.03,
   centerPull: 0.4,
   smoothing: 0.05,
