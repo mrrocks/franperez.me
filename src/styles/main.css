@@ -54,8 +54,11 @@ section {
   display: block;
   width: var(--illustration-width);
   height: var(--illustration-height);
-  background-image: url('/assets/illus.svg');
-  background-repeat: no-repeat;
+}
+
+.shadow img {
+  width: 100%;
+  height: 100%;
   filter: blur(24px);
   opacity: 0.4;
   transform: translateZ(0);
