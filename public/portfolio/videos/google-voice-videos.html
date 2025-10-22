@@ -1,0 +1,127 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Voice - Video Spec</title>
+  <style>
+    BODY {
+      text-align: center;
+    }
+    VIDEO {
+      width: 300px;
+      height: 300px;
+      padding: 2px;
+    }
+
+    input {
+      position: absolute;
+      left: 24px;
+      top: 24px;
+      background: #FFF;
+      border-radius: 4px;
+      color: #999;
+      font-weight: medium;
+      border: 2px solid #E5E5E5;
+      padding: 12px;
+    }
+      input:focus { outline: 0;}
+    
+    .grid {
+      display: inline-grid;
+      grid-template-columns: repeat(7, 1fr);
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <input type="button" onclick="setVideoRate()" type="button" id="changeSpeed" value="Playback speed = 0.5" /> 
+
+  <div class="grid">
+    <video loop autoplay muted>
+      <source src="01_Mic_From_Search.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="02_Mic_Open.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="03_Mic_Listening.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="04_Mic_Listening_to_Loading.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="05_Mic_Loading_Spinner.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="06_Mic_Loading_Spinner_to_VOG.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="07_Mic_VOG_to_Idle.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="08_Mic_Idle_to_Open.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="09_Mic_Listening_to_VOG.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="10_Mic_Open_timeout.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="11_Mic_VOG_to_Open.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="12_Mic_Open_to_MusicDetected.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="13_Mic_Music_Listening.mp4" type="video/mp4">
+    </video>
+
+    <video loop autoplay muted>
+      <source src="14_Mic_Music_Listening_to_Idle.mp4" type="video/mp4">
+    </video>
+  </div>
+  <script> 
+    var videos = document.getElementsByTagName("video");
+    var changeSpeedButton = document.getElementById("changeSpeed");
+    var currentSpeed = undefined;
+
+    function setRate(rate) {
+      for (var value of videos) {
+        value.playbackRate = rate; 
+      }
+      currentSpeed = rate
+    }
+    
+    setRate(0.5);
+
+    function setVideoRate() { 
+      if (currentSpeed == 0.5){ 
+        setRate(1);
+        changeSpeedButton.value = "Playback speed = 1";
+      } else {
+        setRate(0.5);
+        changeSpeedButton.value = "Playback speed = 0.5";
+      }; 
+      
+    }
+
+  </script> 
+</body>
+</html> 
