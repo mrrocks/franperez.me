@@ -1,27 +1,23 @@
+import * as THREE from "three";
+
 // Core constants
 const TAU = Math.PI * 2;
-const DPR = window.devicePixelRatio || 1;
+const BLOB_COUNT = 4;
+const LOBES_PER_BLOB = 3;
 
-// Canvas setup
-const canvas = document.querySelector("canvas");
-const ctx = canvas.getContext("2d", { alpha: false });
-
-// Configuration objects
-const BLOB_CONFIG = {
+const CONFIG = {
   speed: 1.08,
-  count: 14,
-  scale: 1,
-  padding: 60,
-  breathingRange: 0.03,
-  centerPull: 0.4,
-  smoothing: 0.05,
-  maxDistance: 0.7,
-  morphIntensity: 0.02,
-  morphRandomness: 0.02,
-  rippleAmplitude: 0.7,
-  smoothness: 0.2,
-  timeStep: 0.006,
+  gap: 16, // guaranteed minimum gap between blobs, in CSS px
+  smoothK: 110, // smin fusion strength between lobes (px) — higher = gooier
+  noiseAmp: 14, // organic edge ripple amplitude (px)
+  noiseFreq: 0.0035, // ripple spatial frequency
+  blobScale: 0.62, // lobe radius as fraction of base size
+  squareness: 0.3, // 0 = circular lobes, 1 = square — subtle values fill the center more
+  sync: 0.6, // 0 = each blob morphs independently, 1 = all morph in the same rhythm
+  orbitScale: 0.3, // how far lobes wander from their quadrant anchor
+  breathingRange: 0.05,
   colorStep: 0.001,
+  timeScale: 0.36, // matches old timeStep (0.006) at 60fps
 };
 
 const BLOBS = [
@@ -31,7 +27,7 @@ const BLOBS = [
   { x: 1, y: 1, size: 1.1, color: "oklch(0.98 0.04 163)" },
 ];
 
-// Utility functions
+// Color utilities (OKLCH -> sRGB, since shaders speak RGB)
 function parseOklch(color) {
   const [, l, c, h] = color.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/).map(Number);
   return { l, c, h };
@@ -47,192 +43,258 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-// Canvas management
-function updateCanvasSize() {
-  canvas.width = window.innerWidth * DPR;
-  canvas.height = window.innerHeight * DPR;
-  canvas.style.width = `${window.innerWidth}px`;
-  canvas.style.height = `${window.innerHeight}px`;
-  ctx.scale(DPR, DPR);
-  return Math.max(window.innerWidth / 2, window.innerHeight / 2) * BLOB_CONFIG.scale;
+function oklchToSrgb({ l, c, h }) {
+  const hr = (h * Math.PI) / 180;
+  const A = c * Math.cos(hr);
+  const B = c * Math.sin(hr);
+
+  const l_ = (l + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m_ = (l - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s_ = (l - 0.0894841775 * A - 1.291485548 * B) ** 3;
+
+  const lr = 4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_;
+  const lg = -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_;
+  const lb = -0.0041960863 * l_ - 0.7034186147 * m_ + 1.7076147010 * s_;
+
+  const gamma = (x) => {
+    x = Math.min(1, Math.max(0, x));
+    return x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
+  };
+
+  return [gamma(lr), gamma(lg), gamma(lb)];
 }
 
-let baseSize = updateCanvasSize();
+// Shaders
+const vertexShader = /* glsl */ `
+  void main() {
+    gl_Position = vec4(position, 1.0);
+  }
+`;
 
-// Blob class definition
-class Blob {
-  constructor(i) {
-    const { size, color } = BLOBS[i];
-    this.color = color;
-    this.points = new Float32Array(BLOB_CONFIG.count * 2);
-    this.index = i;
-    this.baseSize = size;
+const fragmentShader = /* glsl */ `
+  #define BLOB_COUNT ${BLOB_COUNT}
+  #define LOBES_PER_BLOB ${LOBES_PER_BLOB}
+  #define LOBE_COUNT ${BLOB_COUNT * LOBES_PER_BLOB}
 
-    this.initializeProperties();
-    this.updateRadius();
-    this.setPosition();
+  uniform vec2 uResolution; // CSS px
+  uniform float uDpr;
+  uniform float uTime;
+  uniform float uGap;
+  uniform float uSmoothK;
+  uniform float uNoiseAmp;
+  uniform float uNoiseFreq;
+  uniform float uSquareness;
+  uniform float uSync;
+  uniform vec3 uLobes[LOBE_COUNT]; // xy = center (CSS px), z = radius
+  uniform vec3 uColors[BLOB_COUNT];
+
+  // --- value noise + fbm ---
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
 
-  initializeProperties() {
-    this.rotation = Math.random() * TAU;
-    this.rotationSpeed = 0.002 * (Math.random() - 0.5) * BLOB_CONFIG.speed;
-    this.time = Math.random() * TAU;
-    this.phase = Math.random() * TAU;
-    this.freq = 0.5 + Math.random();
-    this.sizePhase = Math.random() * TAU;
-    this.breathingAmount = Math.random() * BLOB_CONFIG.breathingRange;
-    this.pointOffsets = Array.from({ length: BLOB_CONFIG.count }, () => Math.random() * TAU);
-    this.distortion = BLOB_CONFIG.morphIntensity + Math.random() * BLOB_CONFIG.morphRandomness;
-    this.colorTime = this.index * (Math.PI / 2);
-  }
-
-  updateRadius() {
-    this.baseRadius = baseSize * this.baseSize;
-  }
-
-  setPosition() {
-    const { x, y } = BLOBS[this.index];
-    const { width, height } = canvas;
-    this.x = (x * width) / DPR;
-    this.y = (y * height) / DPR;
-    this.radius = this.baseRadius;
-  }
-
-  update(blobs) {
-    this.updateMovement();
-    this.resolveCollisions(blobs);
-    this.updateShape();
-    this.updateColor();
-  }
-
-  updateMovement() {
-    const centerX = (BLOBS[this.index].x * canvas.width) / DPR;
-    const centerY = (BLOBS[this.index].y * canvas.height) / DPR;
-    const range = this.baseRadius * 0.0008;
-    const dist = Math.hypot(centerX - this.x, centerY - this.y);
-    const maxDist = this.baseRadius * BLOB_CONFIG.maxDistance;
-
-    this.time += BLOB_CONFIG.timeStep * BLOB_CONFIG.speed;
-    this.rotation += this.rotationSpeed;
-    this.radius = this.baseRadius * (1 + Math.sin(this.time * 0.4 + this.sizePhase) * this.breathingAmount);
-
-    const tx = this.x + Math.sin(this.time * 0.2 * this.freq + this.phase) * range;
-    const ty = this.y + Math.cos(this.time * 0.3 * this.freq + this.phase) * range;
-
-    const pull =
-      dist > maxDist * 0.5 ? Math.min(1, (dist - maxDist * 0.5) / maxDist) * BLOB_CONFIG.centerPull * dist : 0;
-
-    const dx = pull ? ((centerX - this.x) / dist) * pull : 0;
-    const dy = pull ? ((centerY - this.y) / dist) * pull : 0;
-
-    this.x += (tx - this.x + dx) * BLOB_CONFIG.smoothing;
-    this.y += (ty - this.y + dy) * BLOB_CONFIG.smoothing;
-  }
-
-  resolveCollisions(blobs) {
-    blobs.forEach((other) => {
-      if (other === this) return;
-      const [dx, dy] = [this.x - other.x, this.y - other.y];
-      const dist = Math.hypot(dx, dy);
-      const minDist = this.radius + other.radius + BLOB_CONFIG.padding;
-
-      if (dist < minDist) {
-        const angle = Math.atan2(dy, dx);
-        const move = (minDist - dist) / 2;
-        const [mx, my] = [Math.cos(angle) * move, Math.sin(angle) * move];
-        this.x += mx;
-        this.y += my;
-        other.x -= mx;
-        other.y -= my;
-      }
-    });
-  }
-
-  updateShape() {
-    const step = TAU / BLOB_CONFIG.count;
-    for (let i = 0; i < BLOB_CONFIG.count; i++) {
-      const angle = i * step + this.rotation;
-      const time = this.time * 0.9;
-      const dist = this.calculateDistortion(i, time);
-      const r = this.radius * (1 + dist);
-
-      this.points[i * 2] = this.x + Math.cos(angle) * r;
-      this.points[i * 2 + 1] = this.y + Math.sin(angle) * r;
-    }
-  }
-
-  calculateDistortion(i, time) {
-    return (
-      Math.sin(time + this.pointOffsets[i]) * this.distortion +
-      Math.sin(time * 1.5 + this.pointOffsets[(i + 3) % BLOB_CONFIG.count]) *
-        (this.distortion * BLOB_CONFIG.rippleAmplitude)
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+      mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+      mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+      u.y
     );
   }
 
-  updateColor() {
-    this.colorTime += BLOB_CONFIG.colorStep * BLOB_CONFIG.speed;
-    const colors = BLOBS.length;
-    const cycle = TAU;
-    const progress = ((this.colorTime % cycle) / cycle) * colors;
-    const curr = Math.floor(progress);
-    const next = (curr + 1) % colors;
-    const t = progress % 1;
-
-    const c1 = parseOklch(BLOBS[curr].color);
-    const c2 = parseOklch(BLOBS[next].color);
-
-    this.color = `oklch(${lerp(c1.l, c2.l, t)} ${lerp(c1.c, c2.c, t)} ${lerpHue(c1.h, c2.h, t)})`;
+  float fbm(vec2 p) {
+    float v = 0.5 * noise(p);
+    v += 0.25 * noise(p * 2.17);
+    return v / 0.75; // normalize to ~[0,1]
   }
 
-  draw() {
-    ctx.beginPath();
-    ctx.moveTo(this.points[0], this.points[1]);
-    this.drawCurves();
-    ctx.fillStyle = this.color;
-    ctx.fill();
+  // polynomial smooth-min: fuses lobe circles into one organic mass.
+  // It only ever underestimates distance, so the gap test stays
+  // conservative: real gap >= uGap.
+  float smin(float a, float b, float k) {
+    float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+    return mix(b, a, h) - k * h * (1.0 - h);
   }
 
-  drawCurves() {
-    const points = this.points;
-    const count = BLOB_CONFIG.count * 2;
-    const curve = BLOB_CONFIG.smoothness * (this.radius / this.baseRadius);
+  // rounded-box SDF: exact distance field, so the gap guarantee holds.
+  // half-size b with corner radius r*(1-squareness) -> circle at 0, square at 1
+  float sdSquircle(vec2 p, float r) {
+    vec2 q = abs(p) - vec2(r) + r * (1.0 - uSquareness);
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r * (1.0 - uSquareness);
+  }
 
-    for (let i = 0; i < count; i += 2) {
-      const next = (i + 2) % count;
-      const nextNext = (i + 4) % count;
-      const prev = (i - 2 + count) % count;
-
-      const cx1 = points[i] + (points[next] - points[prev]) * curve;
-      const cy1 = points[i + 1] + (points[next + 1] - points[prev + 1]) * curve;
-      const cx2 = points[next] - (points[nextNext] - points[i]) * curve;
-      const cy2 = points[next + 1] - (points[nextNext + 1] - points[i + 1]) * curve;
-
-      ctx.bezierCurveTo(cx1, cy1, cx2, cy2, points[next], points[next + 1]);
+  // SDF of blob i: smin of its lobes + low-freq organic ripple
+  float blobSdf(int i, vec2 p, float t) {
+    float d = 1e6;
+    for (int k = 0; k < LOBES_PER_BLOB; k++) {
+      vec3 lobe = uLobes[i * LOBES_PER_BLOB + k];
+      d = smin(d, sdSquircle(p - lobe.xy, lobe.z), uSmoothK);
     }
+    // ripple: blend each blob's own noise with a shared field -> synced but still organic
+    vec2 q = p * uNoiseFreq + vec2(t * 14.0, -t * 11.0) * uNoiseFreq * 10.0;
+    float n = mix(fbm(q + float(i) * 17.31), fbm(q), uSync);
+    return d + (n - 0.5) * 2.0 * uNoiseAmp;
+  }
+
+  void main() {
+    vec2 p = gl_FragCoord.xy / uDpr;
+    float t = uTime;
+
+    float d[BLOB_COUNT];
+    int best = 0;
+    for (int i = 0; i < BLOB_COUNT; i++) {
+      d[i] = blobSdf(i, p, t);
+      if (d[i] < d[best]) best = i;
+    }
+
+    // distance to the nearest *other* blob
+    float dOther = 1e6;
+    for (int i = 0; i < BLOB_COUNT; i++) {
+      if (i != best) dOther = min(dOther, d[i]);
+    }
+
+    // pixel is painted only if inside the closest blob AND at least
+    // uGap away from every other blob -> guaranteed minimum channel.
+    // AA fringes are biased inward so paint never crosses the boundary.
+    float aaIn = fwidth(d[best]) + 1.0;
+    float inside = 1.0 - smoothstep(-aaIn, 0.0, d[best]);
+    float aaGap = fwidth(dOther) + 1.0;
+    float gapMask = smoothstep(uGap, uGap + aaGap, dOther);
+
+    vec3 color = mix(vec3(1.0), uColors[best], inside * gapMask);
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+// Lobe motion state — lobe k of every blob shares a base rhythm,
+// with a random deviation scaled by (1 - sync)
+const LOBE_BASES = Array.from({ length: LOBES_PER_BLOB }, () => ({
+  phase: Math.random() * TAU,
+  angularSpeed: 0.3 + Math.random() * 0.25, // always positive -> one shared flow direction
+  radialFreq: 0.2 + Math.random() * 0.3,
+  radiusPhase: Math.random() * TAU,
+}));
+
+class Lobe {
+  constructor(blobIndex, k) {
+    const base = LOBE_BASES[k];
+    const wobble = 1 - CONFIG.sync;
+    this.blobIndex = blobIndex;
+    this.phase = base.phase + (Math.random() - 0.5) * TAU * wobble;
+    this.angularSpeed = base.angularSpeed + (Math.random() - 0.5) * 0.25 * wobble;
+    this.radialFreq = base.radialFreq + (Math.random() - 0.5) * 0.2 * wobble;
+    this.radiusPhase = base.radiusPhase + (Math.random() - 0.5) * TAU * wobble;
+    this.breathing = Math.random() * CONFIG.breathingRange;
+  }
+
+  position(t, anchorX, anchorY, baseSize) {
+    // constant-direction orbit: tangential velocity never reverses,
+    // a slow radial sway keeps the path organic instead of a perfect circle
+    const angle = t * this.angularSpeed + this.phase;
+    const sway = 1 + Math.sin(t * this.radialFreq + this.radiusPhase) * 0.3;
+    const orbit = baseSize * CONFIG.orbitScale * sway;
+    const x = anchorX + Math.cos(angle) * orbit;
+    const y = anchorY + Math.sin(angle) * orbit;
+    const r = baseSize * CONFIG.blobScale * (1 + Math.sin(t * 0.4 + this.radiusPhase) * this.breathing);
+    return [x, y, r];
   }
 }
 
-// Animation setup and execution
-const blobs = Array.from({ length: BLOBS.length }, (_, i) => new Blob(i));
+const lobes = BLOBS.flatMap((_, i) => Array.from({ length: LOBES_PER_BLOB }, (_, k) => new Lobe(i, k)));
+
+// Color cycling (same behavior as before, per-blob phase offset)
+const colorTimes = BLOBS.map((_, i) => i * (Math.PI / 2));
+
+function cycledColor(i) {
+  colorTimes[i] += CONFIG.colorStep * CONFIG.speed;
+  const progress = ((colorTimes[i] % TAU) / TAU) * BLOBS.length;
+  const curr = Math.floor(progress);
+  const next = (curr + 1) % BLOBS.length;
+  const t = progress % 1;
+
+  const c1 = parseOklch(BLOBS[curr].color);
+  const c2 = parseOklch(BLOBS[next].color);
+
+  return oklchToSrgb({
+    l: lerp(c1.l, c2.l, t),
+    c: lerp(c1.c, c2.c, t),
+    h: lerpHue(c1.h, c2.h, t),
+  });
+}
+
+// Three.js setup
+const canvas = document.querySelector("canvas");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+renderer.setPixelRatio(dpr);
+
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+// The noise ripple makes the field steeper than a true distance field by up
+// to its worst-case gradient, so "gap in the field" can undershoot on screen.
+// Compensate the threshold so the *visual* gap never drops below CONFIG.gap.
+const NOISE_SLOPE = 2 * CONFIG.noiseAmp * 2.1 * CONFIG.noiseFreq;
+const EFFECTIVE_GAP = CONFIG.gap * (1 + NOISE_SLOPE);
+
+const uniforms = {
+  uResolution: { value: new THREE.Vector2() },
+  uDpr: { value: dpr },
+  uTime: { value: 0 },
+  uGap: { value: EFFECTIVE_GAP },
+  uSmoothK: { value: CONFIG.smoothK },
+  uNoiseAmp: { value: CONFIG.noiseAmp },
+  uNoiseFreq: { value: CONFIG.noiseFreq },
+  uSquareness: { value: CONFIG.squareness },
+  uSync: { value: CONFIG.sync },
+  uLobes: { value: lobes.map(() => new THREE.Vector3()) },
+  uColors: { value: BLOBS.map((b) => new THREE.Vector3(...oklchToSrgb(parseOklch(b.color)))) },
+};
+
+const quad = new THREE.Mesh(
+  new THREE.PlaneGeometry(2, 2),
+  new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms })
+);
+quad.frustumCulled = false;
+scene.add(quad);
+
+function resize() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  renderer.setSize(w, h);
+  uniforms.uResolution.value.set(w, h);
+}
+
+resize();
+window.addEventListener("resize", resize);
+
+// Animation loop
+const clock = new THREE.Clock();
 
 function animate() {
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  blobs.forEach((blob) => {
-    blob.update(blobs);
-    blob.draw();
+  const t = clock.getElapsedTime() * CONFIG.timeScale * CONFIG.speed;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const baseSize = Math.max(w / 2, h / 2);
+
+  lobes.forEach((lobe, i) => {
+    const blob = BLOBS[lobe.blobIndex];
+    // anchor in GL coords (y up), so flip the CSS-space quadrant y
+    const anchorX = blob.x * w;
+    const anchorY = (1 - blob.y) * h;
+    const [x, y, r] = lobe.position(t, anchorX, anchorY, baseSize * blob.size);
+    uniforms.uLobes.value[i].set(x, y, r);
   });
+
+  BLOBS.forEach((_, i) => {
+    uniforms.uColors.value[i].set(...cycledColor(i));
+  });
+
+  uniforms.uTime.value = t;
+  renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
 
-// Event listeners
-window.addEventListener("resize", () => {
-  baseSize = updateCanvasSize();
-  blobs.forEach((blob) => {
-    blob.updateRadius();
-    blob.setPosition();
-  });
-});
-
-// Start animation
 animate();
