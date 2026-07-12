@@ -381,28 +381,20 @@ function runCycle() {
   angles.splitDisc -= 180;
   angles.dial += 90;
   angles.smallDial -= 90;
-  const dialPalette = [
-    themeColor("--color-highlight"),
-    themeColor("--color-accent"),
-    themeColor("--color-primary"),
-    themeColor("--color-secondary"),
-  ];
-  const dialQuarter = (angles.dial / 90) % dialPalette.length;
+  const accent = themeColor("--color-accent");
+  const highlight = themeColor("--color-highlight");
+  const primary = themeColor("--color-primary");
+  const secondary = themeColor("--color-secondary");
+  const warm = "#f7c595";
+  const dialEllipsePalette = [highlight, primary, secondary, warm];
+  const dialCirclePalette = [accent, secondary, warm, primary];
+  const dialCapPalette = [primary, warm, highlight, secondary];
+  const dialQuarter = (angles.dial / 90) % dialEllipsePalette.length;
   const smallDialQuarter =
-    ((Math.abs(angles.smallDial) / 90) % dialPalette.length + dialPalette.length) %
-    dialPalette.length;
-  const smallDialSegmentPalette = [
-    "#f7c595",
-    themeColor("--color-highlight"),
-    themeColor("--color-accent"),
-    themeColor("--color-secondary"),
-  ];
-  const smallDialRevealPalette = [
-    themeColor("--color-primary"),
-    themeColor("--color-accent"),
-    themeColor("--color-secondary"),
-    themeColor("--color-highlight"),
-  ];
+    ((Math.abs(angles.smallDial) / 90) % dialEllipsePalette.length + dialEllipsePalette.length) %
+    dialEllipsePalette.length;
+  const smallDialSegmentPalette = [warm, secondary, accent, warm];
+  const smallDialRevealPalette = [accent, warm, highlight, secondary];
   animateColors();
 
   timeline = createTimeline({
@@ -418,7 +410,7 @@ function runCycle() {
     .add(
       parts.dialCap,
       {
-        fill: dialPalette[(dialQuarter + 2) % dialPalette.length],
+        fill: dialCapPalette[dialQuarter],
         rotate: angles.dial,
         duration: 1200,
       },
@@ -426,12 +418,12 @@ function runCycle() {
     )
     .add(
       parts.dialEllipse,
-      { fill: dialPalette[dialQuarter], duration: 1200 },
+      { fill: dialEllipsePalette[dialQuarter], duration: 1200 },
       360,
     )
     .add(
       parts.dialCircle,
-      { fill: dialPalette[(dialQuarter + 1) % dialPalette.length], duration: 1200 },
+      { fill: dialCirclePalette[dialQuarter], duration: 1200 },
       360,
     )
     .add(
