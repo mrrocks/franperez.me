@@ -1,4 +1,5 @@
-import anime from "animejs";
+import { animate } from "animejs";
+import { motionPreference } from "../utils/motion.js";
 
 const zigzag = document.querySelector(".zigzag path");
 const links = document.querySelectorAll(".links a");
@@ -31,8 +32,7 @@ class PathAnimator {
     const from = this.currentPath ? parseFloat(zigzag.style.strokeDashoffset) : -pathLength;
 
     this.currentPath?.pause();
-    this.currentPath = anime({
-      targets: ".zigzag path",
+    this.currentPath = animate(zigzag, {
       strokeDashoffset: [from, to],
       ...ANIMATION_CONFIG,
       duration: Math.abs(to - from) * durationFactor,
@@ -42,11 +42,15 @@ class PathAnimator {
   animateColor = (color) => {
     this.currentColor?.pause();
     this.lastColor = color;
-    this.currentColor = anime({
-      targets: ".zigzag path",
+    this.currentColor = animate(zigzag, {
       stroke: color,
       ...ANIMATION_CONFIG,
     });
+  };
+
+  setPathImmediately = (offset) => {
+    this.currentPath?.pause();
+    zigzag.style.strokeDashoffset = offset;
   };
 
   setColorImmediately = (color) => {
@@ -60,6 +64,12 @@ const animator = new PathAnimator();
 
 links.forEach((link) => {
   const handleHover = (isEntering) => {
+    if (motionPreference.matches) {
+      if (isEntering) animator.setColorImmediately(COLORS[link.id]);
+      animator.setPathImmediately(isEntering ? 0 : -pathLength);
+      return;
+    }
+
     const currentOffset = parseFloat(zigzag.style.strokeDashoffset);
     const pathIsHidden = currentOffset <= -pathLength;
 

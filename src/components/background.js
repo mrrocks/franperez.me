@@ -9,6 +9,7 @@ import {
   SRGBColorSpace,
   WebGLRenderer,
 } from "three";
+import { watchMotionPreference } from "../utils/motion.js";
 
 const TAU = Math.PI * 2;
 const CURVE_SUBDIVISIONS = 16;
@@ -309,10 +310,10 @@ function resize() {
   renderer.render(scene, camera);
 }
 
-function updateMotionPreference() {
+function updateMotionPreference(reducedMotion) {
   renderer.setAnimationLoop(null);
 
-  if (motionPreference.matches) {
+  if (reducedMotion) {
     renderer.render(scene, camera);
     return;
   }
@@ -320,9 +321,7 @@ function updateMotionPreference() {
   renderer.setAnimationLoop(animate);
 }
 
-const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 window.addEventListener("resize", resize);
-motionPreference.addEventListener("change", updateMotionPreference);
 
 resize();
-updateMotionPreference();
+watchMotionPreference(updateMotionPreference);
