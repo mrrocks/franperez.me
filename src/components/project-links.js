@@ -37,12 +37,12 @@ function createController(link, index) {
     id: patternId,
     x: "0",
     y: String(lineTop),
-    width: "7.5",
+    width: "6",
     height: "4",
     patternUnits: "userSpaceOnUse",
   });
   const wave = createElement("path", {
-    d: "M0 2C1.25 0 2.5 0 3.75 2S6.25 4 7.5 2",
+    d: "M0 2C1 0 2 0 3 2S5 4 6 2",
     fill: "none",
     stroke: "#6439ed",
     "stroke-opacity": ".55",
@@ -73,11 +73,11 @@ function createController(link, index) {
 
     return [
       createElement("rect", {
-        x: String(characterBounds.left - bounds.left - 0.75),
+        x: String(characterBounds.left - bounds.left - 0.375),
         y: String(lineTop - 2),
-        width: String(characterBounds.width + 1.5),
+        width: String(characterBounds.width + 0.75),
         height: "8",
-        rx: "1",
+        rx: "0.5",
         fill: "#000",
       }),
     ];
@@ -104,8 +104,8 @@ function createController(link, index) {
 
     if (!animation) {
       animation = animate(state, {
-        offset: 7.5,
-        duration: 500,
+        offset: 6,
+        duration: 400,
         ease: "linear",
         loop: true,
         onUpdate: () => pattern.setAttribute("x", String(state.offset)),
