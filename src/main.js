@@ -3,3 +3,4 @@ import "./styles/main.css";
 import "./components/background.js";
 import "./components/illustration.js";
 import "./components/links.js";
+import "./components/project-links.js";

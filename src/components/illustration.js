@@ -205,15 +205,15 @@ function createFractalMesh(paths) {
       440 - vertex.baseY,
     );
 
-    vertex.amplitudeX = Math.min(12, Math.max(5, boundaryDistance * 0.3));
-    vertex.amplitudeY = Math.min(9, Math.max(4, boundaryDistance * 0.22));
+    vertex.amplitudeX = Math.min(16, Math.max(6, boundaryDistance * 0.38));
+    vertex.amplitudeY = Math.min(12, Math.max(5, boundaryDistance * 0.3));
     vertex.phase = (index * 2.399) % (Math.PI * 2);
   });
 
   const render = (showLighting = true) => {
     movingVertices.forEach((vertex) => {
       const primaryWave = Math.sin(state.progress);
-      const secondaryWave = Math.sin(state.progress * 2) * 0.35;
+      const secondaryWave = Math.sin(state.progress * 2) * 0.4;
 
       vertex.x =
         vertex.baseX +
@@ -249,7 +249,7 @@ function createFractalMesh(paths) {
         1,
         Math.max(0, (normalizedX * lightX + normalizedY * lightY + 1.4) / 2.8),
       );
-      path.setAttribute("fill", interpolateGreenShade(originalShade + (directionalLight - 0.5) * 0.5));
+      path.setAttribute("fill", interpolateGreenShade(originalShade + (directionalLight - 0.5) * 0.65));
     });
   };
 
@@ -360,7 +360,7 @@ function startFractalMotion() {
 
   fractalAnimation = animate(fractalMesh.state, {
     progress: Math.PI * 2,
-    duration: 10000,
+    duration: 8000,
     ease: "linear",
     loop: true,
     onUpdate: () => fractalMesh.render(),
