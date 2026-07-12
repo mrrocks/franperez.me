@@ -1,1 +1,0 @@
-exports.scaleToSize = (from, to) -> to / from
