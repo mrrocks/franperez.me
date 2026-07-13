@@ -1,5 +1,4 @@
 import { animate } from "animejs";
-import { motionPreference } from "../utils/motion.js";
 
 const namespace = "http://www.w3.org/2000/svg";
 const links = [...document.querySelectorAll(".project-link, .links a")];
@@ -33,18 +32,25 @@ function createController(link, index) {
     focusable: "false",
   });
   const definitions = createElement("defs");
+  let wavePath = "M-12 2";
+  for (let x = -12; x < 24; x += 6) {
+    wavePath += `C${x + 1} 0 ${x + 2} 0 ${x + 3} 2S${x + 5} 4 ${x + 6} 2`;
+  }
   const pattern = createElement("pattern", {
     id: patternId,
     x: "0",
     y: String(lineTop),
-    width: "6",
+    width: "12",
     height: "4",
     patternUnits: "userSpaceOnUse",
   });
   const wave = createElement("path", {
-    d: "M0 2C1 0 2 0 3 2S5 4 6 2",
+    d: wavePath,
     fill: "none",
+    "shape-rendering": "geometricPrecision",
     stroke: "#6439ed",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
     "stroke-opacity": ".55",
     "stroke-width": "1.2",
   });
@@ -70,12 +76,15 @@ function createController(link, index) {
     characterRange.setStart(textNode, characterIndex);
     characterRange.setEnd(textNode, characterIndex + 1);
     const characterBounds = characterRange.getBoundingClientRect();
+    const cutoutWidth = characterBounds.width + 0.75;
 
     return [
       createElement("rect", {
-        x: String(characterBounds.left - bounds.left - 0.375),
+        x: String(
+          characterBounds.left - bounds.left + (characterBounds.width - cutoutWidth) / 2,
+        ),
         y: String(lineTop - 2),
-        width: String(characterBounds.width + 0.75),
+        width: String(cutoutWidth),
         height: "8",
         rx: "0.5",
         fill: "#000",
@@ -100,12 +109,10 @@ function createController(link, index) {
   link.append(svg);
 
   const start = () => {
-    if (motionPreference.matches) return;
-
     if (!animation) {
       animation = animate(state, {
-        offset: 6,
-        duration: 400,
+        offset: 12,
+        duration: 800,
         ease: "linear",
         loop: true,
         onUpdate: () => pattern.setAttribute("x", String(state.offset)),

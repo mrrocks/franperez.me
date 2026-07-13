@@ -1,5 +1,4 @@
 import { animate } from "animejs";
-import { motionPreference } from "../utils/motion.js";
 
 const zigzag = document.querySelector(".zigzag path");
 const links = document.querySelectorAll(".links a");
@@ -64,12 +63,6 @@ const animator = new PathAnimator();
 
 links.forEach((link) => {
   const handleHover = (isEntering) => {
-    if (motionPreference.matches) {
-      if (isEntering) animator.setColorImmediately(COLORS[link.id]);
-      animator.setPathImmediately(isEntering ? 0 : -pathLength);
-      return;
-    }
-
     const currentOffset = parseFloat(zigzag.style.strokeDashoffset);
     const pathIsHidden = currentOffset <= -pathLength;
 

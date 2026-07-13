@@ -9,10 +9,13 @@ import {
   SRGBColorSpace,
   WebGLRenderer,
 } from "three";
-import { watchMotionPreference } from "../utils/motion.js";
+import { watchPageVisibility } from "../utils/page-visibility.js";
 
 const TAU = Math.PI * 2;
 const CURVE_SUBDIVISIONS = 16;
+const BASE_FRAME_DURATION = 1000 / 60;
+const COLOR_LUT_SIZE = 1024;
+const MAX_PIXEL_RATIO = 1.5;
 
 const CONFIG = {
   speed: 1.08,
@@ -32,15 +35,25 @@ const CONFIG = {
 };
 
 const BLOB_DEFINITIONS = [
-  { x: 0, y: 0, size: 1.1, color: "oklch(0.98 0.04 66)" },
-  { x: 1, y: 0, size: 0.9, color: "oklch(0.98 0.04 2)" },
-  { x: 0, y: 1, size: 0.9, color: "oklch(0.98 0.04 285)" },
-  { x: 1, y: 1, size: 1.1, color: "oklch(0.98 0.04 163)" },
+  { x: 0, y: 0, size: 1.1 },
+  { x: 1, y: 0, size: 0.9 },
+  { x: 0, y: 1, size: 0.9 },
+  { x: 1, y: 1, size: 1.1 },
 ];
 
-function parseOklch(color) {
-  const [, l, c, h] = color.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/).map(Number);
-  return { l, c, h };
+function randomBetween(minimum, maximum) {
+  return minimum + Math.random() * (maximum - minimum);
+}
+
+function createBackgroundPalette() {
+  const baseHue = Math.random() * 360;
+  const hueOffsets = [0, 74, 166, 282];
+
+  return hueOffsets.map((offset) => ({
+    l: randomBetween(0.974, 0.986),
+    c: randomBetween(0.032, 0.046),
+    h: (baseHue + offset + randomBetween(-9, 9) + 360) % 360,
+  }));
 }
 
 function lerp(a, b, amount) {
@@ -71,17 +84,41 @@ function oklchToSrgb({ l, c, h }) {
   return [gammaCorrect(linearRed), gammaCorrect(linearGreen), gammaCorrect(linearBlue)];
 }
 
-function sampleCubicBezier(start, controlStart, controlEnd, end, amount) {
+const cubicWeights = new Float32Array(CURVE_SUBDIVISIONS * 4);
+
+for (let sample = 0; sample < CURVE_SUBDIVISIONS; sample++) {
+  const amount = sample / CURVE_SUBDIVISIONS;
   const inverse = 1 - amount;
+  const offset = sample * 4;
+  cubicWeights[offset] = inverse ** 3;
+  cubicWeights[offset + 1] = 3 * inverse ** 2 * amount;
+  cubicWeights[offset + 2] = 3 * inverse * amount ** 2;
+  cubicWeights[offset + 3] = amount ** 3;
+}
+
+function sampleCubicBezier(start, controlStart, controlEnd, end, sample) {
+  const offset = sample * 4;
   return (
-    inverse ** 3 * start +
-    3 * inverse ** 2 * amount * controlStart +
-    3 * inverse * amount ** 2 * controlEnd +
-    amount ** 3 * end
+    cubicWeights[offset] * start +
+    cubicWeights[offset + 1] * controlStart +
+    cubicWeights[offset + 2] * controlEnd +
+    cubicWeights[offset + 3] * end
   );
 }
 
-const palette = BLOB_DEFINITIONS.map(({ color }) => parseOklch(color));
+const palette = createBackgroundPalette();
+const colorLut = Array.from({ length: COLOR_LUT_SIZE }, (_, index) => {
+  const progress = (index / COLOR_LUT_SIZE) * palette.length;
+  const current = Math.floor(progress);
+  const next = (current + 1) % palette.length;
+  const amount = progress % 1;
+
+  return oklchToSrgb({
+    l: lerp(palette[current].l, palette[next].l, amount),
+    c: lerp(palette[current].c, palette[next].c, amount),
+    h: lerpHue(palette[current].h, palette[next].h, amount),
+  });
+});
 const contourVertexCount = CONFIG.pointCount * CURVE_SUBDIVISIONS;
 
 class Blob {
@@ -138,23 +175,24 @@ class Blob {
     this.updateGeometry();
   }
 
-  update(blobs, viewport) {
-    this.updateMovement(viewport);
+  update(blobs, viewport, frameScale) {
+    this.updateMovement(viewport, frameScale);
     this.resolveCollisions(blobs);
     this.updateShape();
     this.updateGeometry();
-    this.updateColor();
+    this.updateColor(true, frameScale);
   }
 
-  updateMovement(viewport) {
+  updateMovement(viewport, frameScale) {
     const centerX = this.definition.x * viewport.width;
     const centerY = this.definition.y * viewport.height;
     const distanceFromCenter = Math.hypot(centerX - this.x, centerY - this.y);
     const maximumDistance = this.baseRadius * CONFIG.maxDistance;
     const range = this.baseRadius * 0.0008;
+    const smoothing = 1 - (1 - CONFIG.smoothing) ** frameScale;
 
-    this.time += CONFIG.timeStep * CONFIG.speed;
-    this.rotation += this.rotationSpeed;
+    this.time += CONFIG.timeStep * CONFIG.speed * frameScale;
+    this.rotation += this.rotationSpeed * frameScale;
     this.radius = this.baseRadius * (1 + Math.sin(this.time * 0.4 + this.sizePhase) * this.breathingAmount);
 
     const targetX = this.x + Math.sin(this.time * 0.2 * this.frequency + this.phase) * range;
@@ -168,8 +206,8 @@ class Blob {
     const pullX = pull ? ((centerX - this.x) / distanceFromCenter) * pull : 0;
     const pullY = pull ? ((centerY - this.y) / distanceFromCenter) * pull : 0;
 
-    this.x += (targetX - this.x + pullX) * CONFIG.smoothing;
-    this.y += (targetY - this.y + pullY) * CONFIG.smoothing;
+    this.x += (targetX - this.x + pullX) * smoothing;
+    this.y += (targetY - this.y + pullY) * smoothing;
   }
 
   resolveCollisions(blobs) {
@@ -235,30 +273,31 @@ class Blob {
       const controlEndY = endY - (this.points[following + 1] - startY) * curve;
 
       for (let sample = 0; sample < CURVE_SUBDIVISIONS; sample++) {
-        const amount = sample / CURVE_SUBDIVISIONS;
         const vertex = 1 + index * CURVE_SUBDIVISIONS + sample;
         const offset = vertex * 3;
-        positions[offset] = sampleCubicBezier(startX, controlStartX, controlEndX, endX, amount);
-        positions[offset + 1] = sampleCubicBezier(startY, controlStartY, controlEndY, endY, amount);
+        positions[offset] = sampleCubicBezier(startX, controlStartX, controlEndX, endX, sample);
+        positions[offset + 1] = sampleCubicBezier(startY, controlStartY, controlEndY, endY, sample);
       }
     }
 
     this.geometry.attributes.position.needsUpdate = true;
   }
 
-  updateColor(advance = true) {
-    if (advance) this.colorTime += CONFIG.colorStep * CONFIG.speed;
-    const progress = ((this.colorTime % TAU) / TAU) * palette.length;
+  updateColor(advance = true, frameScale = 1) {
+    if (advance) this.colorTime += CONFIG.colorStep * CONFIG.speed * frameScale;
+    const progress = ((this.colorTime % TAU) / TAU) * COLOR_LUT_SIZE;
     const current = Math.floor(progress);
-    const next = (current + 1) % palette.length;
+    const next = (current + 1) % COLOR_LUT_SIZE;
     const amount = progress % 1;
-    const color = oklchToSrgb({
-      l: lerp(palette[current].l, palette[next].l, amount),
-      c: lerp(palette[current].c, palette[next].c, amount),
-      h: lerpHue(palette[current].h, palette[next].h, amount),
-    });
+    const color = colorLut[current];
+    const nextColor = colorLut[next];
 
-    this.material.color.setRGB(color[0], color[1], color[2], SRGBColorSpace);
+    this.material.color.setRGB(
+      lerp(color[0], nextColor[0], amount),
+      lerp(color[1], nextColor[1], amount),
+      lerp(color[2], nextColor[2], amount),
+      SRGBColorSpace,
+    );
   }
 }
 
@@ -275,6 +314,8 @@ const viewport = {
   height: window.innerHeight,
 };
 let baseSize = Math.max(viewport.width / 2, viewport.height / 2) * CONFIG.scale;
+let previousFrameTime = 0;
+let resizeFrame;
 
 renderer.outputColorSpace = SRGBColorSpace;
 renderer.setClearColor(0xffffff, 1);
@@ -283,13 +324,17 @@ camera.position.z = 1;
 const blobs = BLOB_DEFINITIONS.map((_, index) => new Blob(index, baseSize, viewport));
 blobs.forEach(({ mesh }) => scene.add(mesh));
 
-function renderFrame() {
-  blobs.forEach((blob) => blob.update(blobs, viewport));
+function renderFrame(frameScale) {
+  blobs.forEach((blob) => blob.update(blobs, viewport, frameScale));
   renderer.render(scene, camera);
 }
 
-function animate() {
-  renderFrame();
+function animate(time) {
+  const elapsed = previousFrameTime
+    ? Math.min(time - previousFrameTime, BASE_FRAME_DURATION * 3)
+    : BASE_FRAME_DURATION;
+  previousFrameTime = time;
+  renderFrame(elapsed / BASE_FRAME_DURATION);
 }
 
 function resize() {
@@ -297,7 +342,7 @@ function resize() {
   viewport.height = window.innerHeight;
   baseSize = Math.max(viewport.width / 2, viewport.height / 2) * CONFIG.scale;
 
-  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
   renderer.setSize(viewport.width, viewport.height, false);
 
   camera.left = 0;
@@ -310,18 +355,24 @@ function resize() {
   renderer.render(scene, camera);
 }
 
-function updateMotionPreference(reducedMotion) {
+function scheduleResize() {
+  window.cancelAnimationFrame(resizeFrame);
+  resizeFrame = window.requestAnimationFrame(resize);
+}
+
+function updatePageVisibility(visible) {
   renderer.setAnimationLoop(null);
 
-  if (reducedMotion) {
+  if (!visible) {
     renderer.render(scene, camera);
     return;
   }
 
+  previousFrameTime = 0;
   renderer.setAnimationLoop(animate);
 }
 
-window.addEventListener("resize", resize);
+window.addEventListener("resize", scheduleResize);
 
 resize();
-watchMotionPreference(updateMotionPreference);
+watchPageVisibility(updatePageVisibility);
