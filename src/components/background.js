@@ -167,10 +167,24 @@ class Blob {
   }
 
   resize(baseSize, viewport) {
-    this.baseRadius = baseSize * this.definition.size;
-    this.radius = this.baseRadius;
-    this.x = this.definition.x * viewport.width;
-    this.y = this.definition.y * viewport.height;
+    const baseRadius = baseSize * this.definition.size;
+    const anchorX = this.definition.x * viewport.width;
+    const anchorY = this.definition.y * viewport.height;
+
+    if (this.baseRadius) {
+      const scale = baseRadius / this.baseRadius;
+      this.x = anchorX + (this.x - this.anchorX) * scale;
+      this.y = anchorY + (this.y - this.anchorY) * scale;
+      this.radius *= scale;
+    } else {
+      this.x = anchorX;
+      this.y = anchorY;
+      this.radius = baseRadius;
+    }
+
+    this.baseRadius = baseRadius;
+    this.anchorX = anchorX;
+    this.anchorY = anchorY;
     this.updateShape();
     this.updateGeometry();
   }

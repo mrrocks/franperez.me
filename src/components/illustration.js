@@ -1,17 +1,64 @@
 import { animate, createTimeline, utils } from "animejs";
+import {
+  AmbientLight,
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  ColorManagement,
+  DirectionalLight,
+  DoubleSide,
+  DynamicDrawUsage,
+  Mesh,
+  MeshStandardMaterial,
+  OrthographicCamera,
+  Scene,
+  ShapeUtils,
+  SRGBColorSpace,
+  Vector2,
+  WebGLRenderer,
+} from "three";
+import {
+  DisplayP3ColorSpace,
+  DisplayP3ColorSpaceImpl,
+} from "three/addons/math/ColorSpaces.js";
 import { watchPageVisibility } from "../utils/page-visibility.js";
 
 const illustration = document.querySelector(".illustration");
 const parser = new DOMParser();
 const FRACTAL_BOUNDS = { x: 0, y: 320, width: 240, height: 120 };
 const MAX_FRACTAL_PIXEL_RATIO = 2;
-const greenPalette = ["#94f4c3", "#a2f8cc", "#acfed4", "#b0fbd5", "#b9feda", "#c2fee0", "#c5fee1", "#d4fee9"];
-const greenPaletteRgb = greenPalette.map((color) => [
-  Number.parseInt(color.slice(1, 3), 16),
-  Number.parseInt(color.slice(3, 5), 16),
-  Number.parseInt(color.slice(5, 7), 16),
-]);
-const greenFills = new Set(greenPalette);
+const FRACTAL_CONFIG = {
+  depth: 18,
+  duration: 8000,
+  roughness: 0.86,
+  saturation: 1.22,
+  ambientIntensity: 2.85,
+  lightIntensity: 1.15,
+  interactionRadius: 155,
+  interactionStrength: 1.75,
+  interactionLift: 1.15,
+  interactionFollow: 0.26,
+  interactionRelease: 0.055,
+  interactionTargetDecay: 0.86,
+  lightSmoothing: 0.18,
+  lightDecay: 0.82,
+  maximumInteractionSpeed: 14,
+};
+const FRACTAL_PALETTE = [
+  "#94f4c3",
+  "#a2f8cc",
+  "#acfed4",
+  "#b0fbd5",
+  "#b9feda",
+  "#c2fee0",
+  "#c5fee1",
+  "#d4fee9",
+];
+const greenFills = new Set(FRACTAL_PALETTE);
+ColorManagement.spaces[DisplayP3ColorSpace] = DisplayP3ColorSpaceImpl;
+const FRACTAL_COLOR_SPACE = window.matchMedia("(color-gamut: p3)").matches
+  ? DisplayP3ColorSpace
+  : SRGBColorSpace;
 const angles = {
   dial: 0,
   disc: 0,
@@ -153,21 +200,102 @@ function parseLinearPath(pathData) {
   return subpaths;
 }
 
-function interpolateGreenShade(amount) {
-  const position = Math.min(1, Math.max(0, amount)) * (greenPalette.length - 1);
-  const lowerIndex = Math.floor(position);
-  const upperIndex = Math.min(greenPalette.length - 1, lowerIndex + 1);
-  const progress = position - lowerIndex;
-  const lower = greenPaletteRgb[lowerIndex];
-  const upper = greenPaletteRgb[upperIndex];
-  const channels = lower.map((channel, index) => Math.round(channel + (upper[index] - channel) * progress));
+function normalizeSubpath(subpath) {
+  const first = subpath[0];
+  const last = subpath.at(-1);
+  return first.x === last.x && first.y === last.y ? subpath.slice(0, -1) : subpath;
+}
 
-  return `rgb(${channels.join(" ")})`;
+function createFractalColor(value) {
+  const color =
+    FRACTAL_COLOR_SPACE === SRGBColorSpace
+      ? new Color(value)
+      : new Color().setRGB(
+          ...[1, 3, 5].map(
+            (index) => Number.parseInt(value.slice(index, index + 2), 16) / 255,
+          ),
+          FRACTAL_COLOR_SPACE,
+        );
+  const luminance = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
+
+  color.r = luminance + (color.r - luminance) * FRACTAL_CONFIG.saturation;
+  color.g = luminance + (color.g - luminance) * FRACTAL_CONFIG.saturation;
+  color.b = luminance + (color.b - luminance) * FRACTAL_CONFIG.saturation;
+  return color;
+}
+
+function createFractalTopology(paths) {
+  const vertices = [];
+  const vertexIndicesByPosition = new Map();
+  const triangleVertexIndices = [];
+  const colors = [];
+
+  const getVertexIndex = ({ x, y }) => {
+    const key = `${x.toFixed(3)},${y.toFixed(3)}`;
+
+    if (!vertexIndicesByPosition.has(key)) {
+      const baseX = x - FRACTAL_BOUNDS.x;
+      const baseY = y - FRACTAL_BOUNDS.y;
+      const boundaryDistance = Math.min(
+        baseX,
+        FRACTAL_BOUNDS.width - baseX,
+        baseY,
+        FRACTAL_BOUNDS.height - baseY,
+      );
+      const normalizedX = baseX / FRACTAL_BOUNDS.width;
+      const normalizedY = baseY / FRACTAL_BOUNDS.height;
+
+      vertexIndicesByPosition.set(key, vertices.length);
+      vertices.push({
+        baseX,
+        baseY,
+        x: baseX,
+        y: baseY,
+        z: 0,
+        amplitudeX: boundaryDistance ? Math.min(16, Math.max(6, boundaryDistance * 0.38)) : 0,
+        amplitudeY: boundaryDistance ? Math.min(12, Math.max(5, boundaryDistance * 0.3)) : 0,
+        amplitudeZ: boundaryDistance
+          ? Math.min(FRACTAL_CONFIG.depth, Math.max(6, boundaryDistance * 0.5))
+          : 0,
+        interactionX: 0,
+        interactionY: 0,
+        interactionZ: 0,
+        interactionTargetX: 0,
+        interactionTargetY: 0,
+        interactionTargetZ: 0,
+        phase: (normalizedX * 1.25 + normalizedY * 0.75) * Math.PI,
+      });
+    }
+
+    return vertexIndicesByPosition.get(key);
+  };
+
+  paths.forEach((path) => {
+    const color = createFractalColor(path.getAttribute("fill"));
+
+    parseLinearPath(path.getAttribute("d")).forEach((rawSubpath) => {
+      const subpath = normalizeSubpath(rawSubpath);
+      const vertexIndices = subpath.map(getVertexIndex);
+      const contour = subpath.map(({ x, y }) => new Vector2(x, y));
+
+      ShapeUtils.triangulateShape(contour, []).forEach((triangle) => {
+        triangle.forEach((index) => {
+          triangleVertexIndices.push(vertexIndices[index]);
+          colors.push(color.r, color.g, color.b);
+        });
+      });
+    });
+  });
+
+  return {
+    colors: new Float32Array(colors),
+    triangleVertexIndices: new Uint16Array(triangleVertexIndices),
+    vertices,
+  };
 }
 
 function createFractalMesh(paths) {
   const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d", { alpha: true });
   const svg = paths[0].ownerSVGElement;
   const background = [...svg.querySelectorAll(":scope > path[fill]")].find((path) => {
     const bounds = path.getBBox();
@@ -178,38 +306,49 @@ function createFractalMesh(paths) {
       bounds.height === FRACTAL_BOUNDS.height
     );
   });
-  const verticesByPosition = new Map();
-  const shapes = paths.map((path) => {
-    const bounds = path.getBBox();
-    const fill = path.getAttribute("fill");
-
-    return {
-      centerX: bounds.x + bounds.width / 2,
-      centerY: bounds.y + bounds.height / 2,
-      originalShade: greenPalette.indexOf(fill.toLowerCase()) / (greenPalette.length - 1),
-      subpaths: parseLinearPath(path.getAttribute("d")).map((subpath) =>
-        subpath.map(({ x, y }) => {
-          const key = `${x.toFixed(3)},${y.toFixed(3)}`;
-
-          if (!verticesByPosition.has(key)) {
-            verticesByPosition.set(key, {
-              baseX: x,
-              baseY: y,
-              x,
-              y,
-            });
-          }
-
-          return verticesByPosition.get(key);
-        }),
-      ),
-    };
+  const { colors, triangleVertexIndices, vertices } = createFractalTopology(paths);
+  const positions = new Float32Array(triangleVertexIndices.length * 3);
+  const positionAttribute = new BufferAttribute(positions, 3);
+  const geometry = new BufferGeometry();
+  const material = new MeshStandardMaterial({
+    metalness: 0,
+    roughness: FRACTAL_CONFIG.roughness,
+    side: DoubleSide,
+    vertexColors: true,
   });
-  const movingVertices = [...verticesByPosition.values()].filter(
-    ({ baseX, baseY }) => baseX !== 0 && baseX !== 240 && baseY !== 320 && baseY !== 440,
+  const mesh = new Mesh(geometry, material);
+  const renderer = new WebGLRenderer({
+    alpha: true,
+    antialias: true,
+    canvas,
+    powerPreference: "high-performance",
+  });
+  const scene = new Scene();
+  const camera = new OrthographicCamera(
+    0,
+    FRACTAL_BOUNDS.width,
+    0,
+    FRACTAL_BOUNDS.height,
+    0.1,
+    500,
   );
+  const ambientLight = new AmbientLight(0xffffff, FRACTAL_CONFIG.ambientIntensity);
+  const keyLight = new DirectionalLight(0xffffff, FRACTAL_CONFIG.lightIntensity);
   const state = { progress: 0 };
+  const interaction = {
+    active: false,
+    x: 0,
+    y: 0,
+    lastX: 0,
+    lastY: 0,
+    lastTime: 0,
+    targetVelocityX: 0,
+    targetVelocityY: 0,
+    velocityX: 0,
+    velocityY: 0,
+  };
   let pixelRatio = 0;
+  let previousRenderTime = performance.now();
 
   canvas.className = "illustration__fractal";
   canvas.setAttribute("aria-hidden", "true");
@@ -219,71 +358,173 @@ function createFractalMesh(paths) {
     path.style.visibility = "hidden";
   });
 
-  movingVertices.forEach((vertex, index) => {
-    const boundaryDistance = Math.min(
-      vertex.baseX,
-      240 - vertex.baseX,
-      vertex.baseY - 320,
-      440 - vertex.baseY,
-    );
+  positionAttribute.setUsage(DynamicDrawUsage);
+  geometry.setAttribute("position", positionAttribute);
+  geometry.setAttribute("color", new BufferAttribute(colors, 3));
+  mesh.frustumCulled = false;
 
-    vertex.amplitudeX = Math.min(16, Math.max(6, boundaryDistance * 0.38));
-    vertex.amplitudeY = Math.min(12, Math.max(5, boundaryDistance * 0.3));
-    vertex.phase = (index * 2.399) % (Math.PI * 2);
-  });
+  camera.position.z = 200;
+  keyLight.target.position.set(FRACTAL_BOUNDS.width / 2, FRACTAL_BOUNDS.height / 2, 0);
+  scene.add(mesh, ambientLight, keyLight, keyLight.target);
+
+  renderer.outputColorSpace = FRACTAL_COLOR_SPACE;
+  renderer.setClearColor(0, 0);
+
+  const deactivateInteraction = () => {
+    interaction.active = false;
+    interaction.lastTime = 0;
+    interaction.targetVelocityX = 0;
+    interaction.targetVelocityY = 0;
+    vertices.forEach((vertex) => {
+      vertex.interactionTargetX = 0;
+      vertex.interactionTargetY = 0;
+      vertex.interactionTargetZ = 0;
+    });
+  };
+
+  const updateInteraction = (event) => {
+    const bounds = canvas.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * FRACTAL_BOUNDS.width;
+    const y = ((event.clientY - bounds.top) / bounds.height) * FRACTAL_BOUNDS.height;
+    const inside =
+      x >= 0 && x <= FRACTAL_BOUNDS.width && y >= 0 && y <= FRACTAL_BOUNDS.height;
+
+    if (!inside) {
+      deactivateInteraction();
+      return;
+    }
+
+    if (!interaction.active) {
+      interaction.active = true;
+      interaction.lastX = x;
+      interaction.lastY = y;
+      interaction.lastTime = event.timeStamp;
+    } else {
+      const elapsed = Math.min(50, Math.max(8, event.timeStamp - interaction.lastTime));
+      const frameScale = 1000 / 60 / elapsed;
+      let velocityX = (x - interaction.lastX) * frameScale;
+      let velocityY = (y - interaction.lastY) * frameScale;
+      let speed = Math.hypot(velocityX, velocityY);
+
+      if (speed > FRACTAL_CONFIG.maximumInteractionSpeed) {
+        const scale = FRACTAL_CONFIG.maximumInteractionSpeed / speed;
+        velocityX *= scale;
+        velocityY *= scale;
+        speed = FRACTAL_CONFIG.maximumInteractionSpeed;
+      }
+
+      interaction.targetVelocityX = velocityX;
+      interaction.targetVelocityY = velocityY;
+
+      vertices.forEach((vertex) => {
+        if (!vertex.amplitudeX) return;
+
+        const distance = Math.hypot(vertex.x - x, vertex.y - y);
+        const proximity = Math.max(0, 1 - distance / FRACTAL_CONFIG.interactionRadius) ** 2;
+
+        vertex.interactionTargetX =
+          velocityX * FRACTAL_CONFIG.interactionStrength * proximity;
+        vertex.interactionTargetY =
+          velocityY * FRACTAL_CONFIG.interactionStrength * proximity;
+        vertex.interactionTargetZ = speed * FRACTAL_CONFIG.interactionLift * proximity;
+      });
+
+      interaction.lastX = x;
+      interaction.lastY = y;
+      interaction.lastTime = event.timeStamp;
+    }
+
+    interaction.x = x;
+    interaction.y = y;
+  };
+
+  svg.parentElement.addEventListener("pointermove", updateInteraction, { passive: true });
+  svg.parentElement.addEventListener("pointerleave", deactivateInteraction);
 
   const resize = () => {
     const nextPixelRatio = Math.min(window.devicePixelRatio || 1, MAX_FRACTAL_PIXEL_RATIO);
     if (pixelRatio === nextPixelRatio) return;
 
     pixelRatio = nextPixelRatio;
-    canvas.width = FRACTAL_BOUNDS.width * pixelRatio;
-    canvas.height = FRACTAL_BOUNDS.height * pixelRatio;
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    renderer.setPixelRatio(pixelRatio);
+    renderer.setSize(FRACTAL_BOUNDS.width, FRACTAL_BOUNDS.height, false);
   };
 
   const render = () => {
     resize();
-    context.clearRect(0, 0, FRACTAL_BOUNDS.width, FRACTAL_BOUNDS.height);
 
-    const primaryWave = Math.sin(state.progress);
-    const secondaryWave = Math.sin(state.progress * 2) * 0.4;
+    const currentTime = performance.now();
+    const frameScale = Math.min(2, (currentTime - previousRenderTime) / (1000 / 60));
+    previousRenderTime = currentTime;
 
-    movingVertices.forEach((vertex) => {
+    interaction.velocityX +=
+      (interaction.targetVelocityX - interaction.velocityX) *
+      FRACTAL_CONFIG.lightSmoothing *
+      frameScale;
+    interaction.velocityY +=
+      (interaction.targetVelocityY - interaction.velocityY) *
+      FRACTAL_CONFIG.lightSmoothing *
+      frameScale;
+    interaction.targetVelocityX *= FRACTAL_CONFIG.lightDecay ** frameScale;
+    interaction.targetVelocityY *= FRACTAL_CONFIG.lightDecay ** frameScale;
+
+    vertices.forEach((vertex) => {
+      const primaryWave = Math.sin(state.progress + vertex.phase);
+      const secondaryWave = Math.sin(state.progress * 2 - vertex.phase * 0.5);
+      const targetMagnitude =
+        Math.abs(vertex.interactionTargetX) +
+        Math.abs(vertex.interactionTargetY) +
+        Math.abs(vertex.interactionTargetZ);
+      const response =
+        targetMagnitude > 0.05
+          ? FRACTAL_CONFIG.interactionFollow
+          : FRACTAL_CONFIG.interactionRelease;
+      const blend = 1 - (1 - response) ** frameScale;
+
+      vertex.interactionX += (vertex.interactionTargetX - vertex.interactionX) * blend;
+      vertex.interactionY += (vertex.interactionTargetY - vertex.interactionY) * blend;
+      vertex.interactionZ += (vertex.interactionTargetZ - vertex.interactionZ) * blend;
+      vertex.interactionTargetX *= FRACTAL_CONFIG.interactionTargetDecay ** frameScale;
+      vertex.interactionTargetY *= FRACTAL_CONFIG.interactionTargetDecay ** frameScale;
+      vertex.interactionTargetZ *= FRACTAL_CONFIG.interactionTargetDecay ** frameScale;
+
       vertex.x =
         vertex.baseX +
-        vertex.amplitudeX *
-          (primaryWave * Math.cos(vertex.phase) + secondaryWave * Math.sin(vertex.phase));
+        vertex.amplitudeX * (primaryWave * 0.72 + secondaryWave * 0.28) +
+        vertex.interactionX;
       vertex.y =
         vertex.baseY +
         vertex.amplitudeY *
-          (primaryWave * Math.sin(vertex.phase) - secondaryWave * Math.cos(vertex.phase));
+          (Math.cos(state.progress + vertex.phase * 0.8) * 0.72 +
+            Math.sin(state.progress * 2 + vertex.phase) * 0.28) +
+        vertex.interactionY;
+      vertex.z =
+        vertex.amplitudeZ *
+          (Math.sin(state.progress - vertex.phase) * 0.72 +
+            Math.sin(state.progress * 2 + vertex.phase * 0.5) * 0.28) +
+        vertex.interactionZ;
     });
 
-    const lightX = Math.cos(state.progress);
-    const lightY = Math.sin(state.progress);
-
-    shapes.forEach(({ centerX, centerY, originalShade, subpaths }) => {
-      const normalizedX = (centerX - 120) / 120;
-      const normalizedY = (centerY - 380) / 60;
-      const directionalLight = Math.min(
-        1,
-        Math.max(0, (normalizedX * lightX + normalizedY * lightY + 1.4) / 2.8),
-      );
-
-      context.beginPath();
-      subpaths.forEach(([first, ...remaining]) => {
-        context.moveTo(first.x - FRACTAL_BOUNDS.x, first.y - FRACTAL_BOUNDS.y);
-        remaining.forEach(({ x, y }) => {
-          context.lineTo(x - FRACTAL_BOUNDS.x, y - FRACTAL_BOUNDS.y);
-        });
-        context.closePath();
-      });
-      context.fillStyle = interpolateGreenShade(
-        originalShade + (directionalLight - 0.5) * 0.65,
-      );
-      context.fill();
+    triangleVertexIndices.forEach((vertexIndex, index) => {
+      const vertex = vertices[vertexIndex];
+      const offset = index * 3;
+      positions[offset] = vertex.x;
+      positions[offset + 1] = vertex.y;
+      positions[offset + 2] = vertex.z;
     });
+
+    positionAttribute.needsUpdate = true;
+    geometry.computeVertexNormals();
+    keyLight.position.set(
+      FRACTAL_BOUNDS.width / 2 +
+        Math.cos(state.progress) * FRACTAL_BOUNDS.width +
+        interaction.velocityX * 3,
+      FRACTAL_BOUNDS.height / 2 +
+        Math.sin(state.progress) * FRACTAL_BOUNDS.height +
+        interaction.velocityY * 3,
+      140,
+    );
+    renderer.render(scene, camera);
   };
 
   return {
@@ -435,7 +676,7 @@ function startFractalMotion() {
 
   fractalAnimation = animate(fractalMesh.state, {
     progress: Math.PI * 2,
-    duration: 8000,
+    duration: FRACTAL_CONFIG.duration,
     ease: "linear",
     loop: true,
     onUpdate: () => fractalMesh.render(),
