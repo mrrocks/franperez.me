@@ -4,7 +4,6 @@ import {
   BufferAttribute,
   BufferGeometry,
   Color,
-  ColorManagement,
   DirectionalLight,
   DoubleSide,
   DynamicDrawUsage,
@@ -17,10 +16,6 @@ import {
   Vector2,
   WebGLRenderer,
 } from "three";
-import {
-  DisplayP3ColorSpace,
-  DisplayP3ColorSpaceImpl,
-} from "three/addons/math/ColorSpaces.js";
 import { watchPageVisibility } from "../utils/page-visibility.js";
 
 const illustration = document.querySelector(".illustration");
@@ -31,7 +26,6 @@ const FRACTAL_CONFIG = {
   depth: 18,
   duration: 8000,
   roughness: 0.86,
-  saturation: 1.22,
   ambientIntensity: 2.85,
   lightIntensity: 1.15,
   interactionRadius: 155,
@@ -55,10 +49,6 @@ const FRACTAL_PALETTE = [
   "#d4fee9",
 ];
 const greenFills = new Set(FRACTAL_PALETTE);
-ColorManagement.spaces[DisplayP3ColorSpace] = DisplayP3ColorSpaceImpl;
-const FRACTAL_COLOR_SPACE = window.matchMedia("(color-gamut: p3)").matches
-  ? DisplayP3ColorSpace
-  : SRGBColorSpace;
 const angles = {
   dial: 0,
   disc: 0,
@@ -207,21 +197,7 @@ function normalizeSubpath(subpath) {
 }
 
 function createFractalColor(value) {
-  const color =
-    FRACTAL_COLOR_SPACE === SRGBColorSpace
-      ? new Color(value)
-      : new Color().setRGB(
-          ...[1, 3, 5].map(
-            (index) => Number.parseInt(value.slice(index, index + 2), 16) / 255,
-          ),
-          FRACTAL_COLOR_SPACE,
-        );
-  const luminance = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
-
-  color.r = luminance + (color.r - luminance) * FRACTAL_CONFIG.saturation;
-  color.g = luminance + (color.g - luminance) * FRACTAL_CONFIG.saturation;
-  color.b = luminance + (color.b - luminance) * FRACTAL_CONFIG.saturation;
-  return color;
+  return new Color(value);
 }
 
 function createFractalTopology(paths) {
@@ -367,7 +343,7 @@ function createFractalMesh(paths) {
   keyLight.target.position.set(FRACTAL_BOUNDS.width / 2, FRACTAL_BOUNDS.height / 2, 0);
   scene.add(mesh, ambientLight, keyLight, keyLight.target);
 
-  renderer.outputColorSpace = FRACTAL_COLOR_SPACE;
+  renderer.outputColorSpace = SRGBColorSpace;
   renderer.setClearColor(0, 0);
 
   const deactivateInteraction = () => {
